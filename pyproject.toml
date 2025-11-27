@@ -1,0 +1,27 @@
+[project]
+name = "clockodo-mcp"
+version = "0.1.0"
+description = "An MCP server for Clockodo."
+authors = [
+	{ name = "Max Ostrowski", email = "max.ostrowski@potassco.com" }
+]
+
+requires-python = ">=3.13"
+dependencies = [
+	"mcp",
+	"fastmcp",
+	"pydantic",
+	"requests"
+]
+
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+clockodo-mcp = "clockodo_mcp.main:main"
+
+
+[tool.setuptools]
+packages = ["clockodo_mcp"]
