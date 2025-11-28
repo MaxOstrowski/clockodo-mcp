@@ -93,12 +93,10 @@ RESOURCE_ENDPOINTS = {
 
 def _make_tool(resource: Resource, url: str, model: BaseModel):
     tool_name = f"manage_{resource.value}"
-    param_id = f"{resource.value}_id"
-    param_type = Optional[int]
-    data_type = Optional[model] if model else Optional[dict]
+    data_type = Optional[model]
     sig_params = [
         inspect.Parameter('action', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=Action),
-        inspect.Parameter(param_id, inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=param_type, default=None),
+        inspect.Parameter('resource_id', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=Optional[int], default=None),
         inspect.Parameter('data', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=data_type, default=None)
     ]
     def tool_func(action, resource_id=None, data=None):
@@ -107,7 +105,7 @@ def _make_tool(resource: Resource, url: str, model: BaseModel):
 
         Args:
             action (Action): The action to perform (get, create, update, delete).
-            {param_id} (Optional[int]): The {resource.value} ID for single-resource operations.
+            resource_id (Optional[int]): The resource ID for single-resource operations.
             data (Optional[{model.__name__}]): The payload for create or update operations.
 
         Returns:
@@ -125,21 +123,21 @@ def _make_tool(resource: Resource, url: str, model: BaseModel):
             return resp.json()
         elif action == Action.update:
             if resource_id is None:
-                return {"error": f"{param_id} is required for update action"}
+                return {"error": "resource_id is required for update action"}
             endpoint = f"{base_url}/{resource_id}"
             payload = data.model_dump() if hasattr(data, 'model_dump') else data
             resp = requests.put(endpoint, headers=headers, json=payload)
             return resp.json()
         elif action == Action.delete:
             if resource_id is None:
-                return {"error": f"{param_id} is required for delete action"}
+                return {"error": "resource_id is required for delete action"}
             endpoint = f"{base_url}/{resource_id}"
             resp = requests.delete(endpoint, headers=headers)
             return resp.json()
         else:
             return {"error": "Invalid action"}
     tool_func.__name__ = tool_name
-    tool_func.__doc__ = tool_func.__doc__.format(resource=resource, param_id=param_id, model=model)
+    tool_func.__doc__ = tool_func.__doc__.format(resource=resource, model=model)
     tool_func.__signature__ = inspect.Signature(sig_params)
     mcp.tool(name=tool_name)(tool_func)
 
