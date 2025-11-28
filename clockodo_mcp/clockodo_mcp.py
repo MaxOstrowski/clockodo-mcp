@@ -7,7 +7,7 @@ from enum import Enum
 import requests
 from dotenv import load_dotenv
 import os
-from clockodo_mcp.payload_models import CustomerV3
+from clockodo_mcp.payload_models import CustomerV3, EntryV2, ProjectV4, ServiceV4, TeamV3
 
 load_dotenv()
 AUTH_HEADERS = {
@@ -154,6 +154,159 @@ def manage_customer(action: Action, customer_id: Optional[int] = None, data: Opt
     else:
         return {"error": "Invalid action"}
     
+@mcp.tool()
+def manage_entry(action: Action, entry_id: Optional[int] = None, data: Optional[EntryV2] = None) -> dict:
+    """
+    Manage Clockodo entries via a dedicated tool using EntryV2 model for validation.
+
+    Args:
+        action (Action): The action to perform (get, create, update, delete).
+        entry_id (Optional[int]): The entry ID for single-resource operations.
+        data (Optional[EntryV2]): The payload for create or update operations.
+
+    Returns:
+        dict: The API response from Clockodo.
+    """
+    headers = AUTH_HEADERS
+    base_url = RESOURCE_ENDPOINTS[Resource.entry]
+    if action == Action.get:
+        url = f"{base_url}/{entry_id}" if entry_id else base_url
+        resp = requests.get(url, headers=headers)
+        return resp.json()
+    elif action == Action.create:
+        resp = requests.post(base_url, headers=headers, json=data.model_dump() if data else None)
+        return resp.json()
+    elif action == Action.update:
+        if entry_id is None:
+            return {"error": "entry_id is required for update action"}
+        url = f"{base_url}/{entry_id}"
+        resp = requests.put(url, headers=headers, json=data.model_dump() if data else None)
+        return resp.json()
+    elif action == Action.delete:
+        if entry_id is None:
+            return {"error": "entry_id is required for delete action"}
+        url = f"{base_url}/{entry_id}"
+        resp = requests.delete(url, headers=headers)
+        return resp.json()
+    else:
+        return {"error": "Invalid action"}
+    
+
+
+@mcp.tool()
+def manage_project(action: Action, project_id: Optional[int] = None, data: Optional[ProjectV4] = None) -> dict:
+    """
+    Manage Clockodo projects via a dedicated tool using ProjectV4 model for validation.
+
+    Args:
+        action (Action): The action to perform (get, create, update, delete).
+        project_id (Optional[int]): The project ID for single-resource operations.
+        data (Optional[ProjectV4]): The payload for create or update operations.
+
+    Returns:
+        dict: The API response from Clockodo.
+    """
+    headers = AUTH_HEADERS
+    base_url = RESOURCE_ENDPOINTS[Resource.project]
+    if action == Action.get:
+        url = f"{base_url}/{project_id}" if project_id else base_url
+        resp = requests.get(url, headers=headers)
+        return resp.json()
+    elif action == Action.create:
+        resp = requests.post(base_url, headers=headers, json=data.model_dump() if data else None)
+        return resp.json()
+    elif action == Action.update:
+        if project_id is None:
+            return {"error": "project_id is required for update action"}
+        url = f"{base_url}/{project_id}"
+        resp = requests.put(url, headers=headers, json=data.model_dump() if data else None)
+        return resp.json()
+    elif action == Action.delete:
+        if project_id is None:
+            return {"error": "project_id is required for delete action"}
+        url = f"{base_url}/{project_id}"
+        resp = requests.delete(url, headers=headers)
+        return resp.json()
+    else:
+        return {"error": "Invalid action"}
+
+
+@mcp.tool()
+def manage_service(action: Action, service_id: Optional[int] = None, data: Optional[ServiceV4] = None) -> dict:
+    """
+    Manage Clockodo services via a dedicated tool.
+
+    Args:
+        action (Action): The action to perform (get, create, update, delete).
+        service_id (Optional[int]): The service ID for single-resource operations.
+        data (Optional[ServiceV4]): The payload for create or update operations.
+
+    Returns:
+        dict: The API response from Clockodo.
+    """
+    headers = AUTH_HEADERS
+    base_url = RESOURCE_ENDPOINTS[Resource.service]
+    if action == Action.get:
+        url = f"{base_url}/{service_id}" if service_id else base_url
+        resp = requests.get(url, headers=headers)
+        return resp.json()
+    elif action == Action.create:
+        resp = requests.post(base_url, headers=headers, json=data.model_dump() if data else None)
+        return resp.json()
+    elif action == Action.update:
+        if not service_id:
+            return {"error": "service_id is required for update"}
+        url = f"{base_url}/{service_id}"
+        resp = requests.put(url, headers=headers, json=data.model_dump() if data else None)
+        return resp.json()
+    elif action == Action.delete:
+        if not service_id:
+            return {"error": "service_id is required for delete"}
+        url = f"{base_url}/{service_id}"
+        resp = requests.delete(url, headers=headers)
+        return resp.json()
+    else:
+        return {"error": "Invalid action"}
+    
+    
+@mcp.tool()
+def manage_team(action: Action, team_id: Optional[int] = None, data: Optional[TeamV3] = None) -> dict:
+    """
+    Manage Clockodo teams via a dedicated tool.
+
+    Args:
+        action (Action): The action to perform (get, create, update, delete).
+        team_id (Optional[int]): The team ID for single-resource operations.
+        data (Optional[TeamV3]): The payload for create or update operations.
+
+    Returns:
+        dict: The API response from Clockodo.
+    """
+    headers = AUTH_HEADERS
+    base_url = RESOURCE_ENDPOINTS[Resource.team]
+    if action == Action.get:
+        url = f"{base_url}/{team_id}" if team_id else base_url
+        resp = requests.get(url, headers=headers)
+        return resp.json()
+    elif action == Action.create:
+        resp = requests.post(base_url, headers=headers, json=data.model_dump() if data else None)
+        return resp.json()
+    elif action == Action.update:
+        if not team_id:
+            return {"error": "team_id is required for update"}
+        url = f"{base_url}/{team_id}"
+        resp = requests.put(url, headers=headers, json=data.model_dump() if data else None)
+        return resp.json()
+    elif action == Action.delete:
+        if not team_id:
+            return {"error": "team_id is required for delete"}
+        url = f"{base_url}/{team_id}"
+        resp = requests.delete(url, headers=headers)
+        return resp.json()
+    else:
+        return {"error": "Invalid action"}
+    
+
 
 def main():
     mcp.run(transport="stdio")
