@@ -1,3 +1,4 @@
+"""Clockodo MCP Server implementation."""
 
 from typing import Optional
 from mcp.server.fastmcp import FastMCP
@@ -6,6 +7,7 @@ from enum import Enum
 import requests
 from dotenv import load_dotenv
 import os
+from clockodo_mcp.payload_models import CustomerV3
 
 load_dotenv()
 AUTH_HEADERS = {
@@ -113,6 +115,45 @@ def manage_resource(request: ResourceRequest) -> dict:
         return resp.json()
     else:
         return {"error": "Invalid action"}
+
+
+@mcp.tool()
+def manage_customer(action: Action, customer_id: Optional[int] = None, data: Optional[CustomerV3] = None) -> dict:
+    """
+    Manage Clockodo customers.
+
+    Args:
+        action (Action): The action to perform (get, create, update, delete).
+        customer_id (Optional[int]): The customer ID for single-resource operations.
+        data (Optional[CustomerV3]): The payload for create or update operations.
+
+    Returns:
+        dict: The API response from Clockodo.
+    """
+    headers = AUTH_HEADERS
+    base_url = RESOURCE_ENDPOINTS[Resource.customer]
+    if action == Action.get:
+        url = f"{base_url}/{customer_id}" if customer_id else base_url
+        resp = requests.get(url, headers=headers)
+        return resp.json()
+    elif action == Action.create:
+        resp = requests.post(base_url, headers=headers, json=data.model_dump())
+        return resp.json()
+    elif action == Action.update:
+        if customer_id is None:
+            return {"error": "customer_id is required for update action"}
+        url = f"{base_url}/{customer_id}"
+        resp = requests.put(url, headers=headers, json=data.model_dump())
+        return resp.json()
+    elif action == Action.delete:
+        if customer_id is None:
+            return {"error": "customer_id is required for delete action"}
+        url = f"{base_url}/{customer_id}"
+        resp = requests.delete(url, headers=headers)
+        return resp.json()
+    else:
+        return {"error": "Invalid action"}
+    
 
 def main():
     mcp.run(transport="stdio")
