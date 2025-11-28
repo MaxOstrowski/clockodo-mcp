@@ -20,7 +20,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-clockodo-mcp = "clockodo_mcp.main:main"
+clockodo-mcp = "clockodo_mcp.clockodo_mcp:main"
 
 
 [tool.setuptools]
