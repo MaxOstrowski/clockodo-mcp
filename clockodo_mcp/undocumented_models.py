@@ -1,8 +1,15 @@
+
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 
-# Entry GET
 from pydantic import Field
+
+class UserGetParams(BaseModel):
+    filter: Optional[Dict[str, Any]] = Field(None, example={"active": True, "fulltext": "search", "teams_id": [1, 2]})
+    scope: Optional[str] = Field(None, example="all")
+    sort: Optional[List[Any]] = Field(None, example=[{"id": 1, "name": "User"}])
+    page: Optional[int] = Field(None, example=1)
+    items_per_page: Optional[int] = Field(None, example=100)
 
 class EntryGetParams(BaseModel):
     time_since: str = Field(..., example="2023-02-28T12:00:00Z")

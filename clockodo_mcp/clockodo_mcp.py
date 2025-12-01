@@ -10,11 +10,11 @@ import os
 from clockodo_mcp.payload_models import (
     CustomerV3, EntryV2, ProjectV4, ServiceV4, TeamV3, AbsenceV4, SubprojectV3,
     NonbusinessDayV2, OvertimeCarryV3, OvertimeReductionV3, LumpSumServiceV4,
-    EntryGroupV2, TargetHourV1, AccessGroupV2, HolidaysQuotumV2, WorkTimeV2, UserReportV1, RegisterV1
+    EntryGroupV2, TargetHourV1, AccessGroupV2, HolidaysQuotumV2, WorkTimeV2, UserReportV1, RegisterV1, UserV3
 )
 from clockodo_mcp.undocumented_models import (
     EntryGetParams, CustomerGetParams, ProjectGetParams, ServiceGetParams, TeamGetParams,
-    AbsenceGetParams, SubprojectGetParams, HolidayQuotaGetParams, WorkTimeGetParams,
+    AbsenceGetParams, SubprojectGetParams, HolidayQuotaGetParams, UserGetParams, WorkTimeGetParams,
     NonbusinessDayGetParams, OvertimeCarryGetParams, OvertimeReductionGetParams,
     LumpSumServiceGetParams, EntryGroupGetParams, TargetHourGetParams, UserReportGetParams,
     AccessGroupGetParams, RegisterGetParams
@@ -41,6 +41,7 @@ class Action(str, Enum):
 
 
 class Resource(str, Enum):
+    user = "user"
     entry = "entry"
     customer = "customer"
     project = "project"
@@ -80,6 +81,7 @@ RESOURCE_ENDPOINTS = {
     Resource.user_report: "https://my.clockodo.com/api/userreports",
     Resource.access_group: "https://my.clockodo.com/api/v2/accessGroups",
     Resource.register: "https://my.clockodo.com/api/register",
+    Resource.user: "https://my.clockodo.com/api/v3/users",
 }
 
 RESOURCE_POST_PUT_ENDPOINTS = {
@@ -101,6 +103,7 @@ RESOURCE_POST_PUT_ENDPOINTS = {
     Resource.user_report: UserReportV1,
     Resource.access_group: AccessGroupV2,
     Resource.register: RegisterV1,
+    Resource.user: UserV3,
 }
 
 
@@ -124,6 +127,7 @@ RESOURCE_GET_MODELS = {
     Resource.user_report: UserReportGetParams,
     Resource.access_group: AccessGroupGetParams,
     Resource.register: RegisterGetParams,
+    Resource.user: UserGetParams,
 }
 
 
@@ -146,6 +150,7 @@ RESOURCE_DELETE_MODELS = {
     Resource.user_report: None,
     Resource.access_group: DeleteByIdParams,
     Resource.register: None,
+    Resource.user: DeleteByIdParams,
 }
 
 
