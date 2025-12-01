@@ -148,30 +148,41 @@ RESOURCE_DELETE_MODELS = {
     Resource.register: None,
 }
 
-def make_get_tool(resource, url, model):
-        tool_name = f"get_{resource.value}"
-        data_type = Optional[model]
+
+def make_tool(action: str, resource, url, model):
+        tool_name = f"{action}_{resource.value}"
         sig_params = [
             inspect.Parameter('resource_id', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=Optional[int], default=None),
-            inspect.Parameter('data', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=data_type, default=None)
+            inspect.Parameter('data', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=Optional[model], default=None)
         ]
         def tool_func(resource_id=None, data=None):
             """
-            GET {resource.value} resource from Clockodo API.
+            {action} {resource.value} resource from Clockodo API.
 
             Args:
-                resource_id (Optional[int]): The resource ID for single-resource GET.
-                data (Optional[{model.__name__}]): Query parameters for GET requests.
+                resource_id (Optional[int]): The resource ID for specific resource retrieval.
+                data (Optional[{model.__name__}]): additional parameters.
 
             Returns:
                 dict: The API response from Clockodo.
             """
+            if action == "get":
+                method = "GET"
+            elif action == "delete":
+                method = "DELETE"
+            elif action == "create/update":
+                if resource_id is not None:
+                    method = "PUT"
+                else:
+                    method = "POST"
+            else:
+                raise ValueError(f"Unsupported action: {action}")
             endpoint = f"{url}/{resource_id}" if resource_id else url
             headers = AUTH_HEADERS
-            resp = requests.get(endpoint, headers=headers, params=data.model_dump() if data else None)
+            resp = requests.request(method, endpoint, headers=headers, params=data.model_dump() if data else None)
             return resp.json()
         tool_func.__name__ = tool_name
-        tool_func.__doc__ = tool_func.__doc__.format(resource=resource, model=model)
+        tool_func.__doc__ = tool_func.__doc__.format(action=action, resource=resource, model=model)
         tool_func.__signature__ = inspect.Signature(sig_params)
         mcp.tool(name=tool_name)(tool_func)
 
@@ -183,87 +194,15 @@ def create_tools():
         post_put_model = RESOURCE_POST_PUT_ENDPOINTS[resource]
 
         # GET tool
-
-    
-        make_get_tool(resource, url, get_model)
-
+        if get_model is not None:
+            make_tool("get", resource, url, get_model)
         # DELETE tool
-        if delete_model:
-            def make_delete_tool(resource, url, model):
-                tool_name = f"delete_{resource.value}"
-                data_type = Optional[model]
-                sig_params = [
-                    inspect.Parameter('data', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=data_type, default=None)
-                ]
-                def tool_func(data=None):
-                    """
-                    DELETE {resource.value} resource from Clockodo API.
-
-                    Args:
-                        data (Optional[{model.__name__}]): Parameters for DELETE requests (id, dry_run, force, etc).
-
-                    Returns:
-                        dict: The API response from Clockodo.
-                    """
-                    headers = AUTH_HEADERS
-                    if model is DeleteEntryGroupParams:
-                        params = data.model_dump() if data else None
-                        resp = requests.delete(url, headers=headers, params=params)
-                    else:
-                        resource_id = getattr(data, 'id', None) if data else None
-                        if resource_id is None:
-                            return {"error": "id is required for delete action"}
-                        endpoint = f"{url}/{resource_id}"
-                        params = data.model_dump() if data else None
-                        params.pop('id', None)
-                        resp = requests.delete(endpoint, headers=headers, params=params)
-                    return resp.json()
-                tool_func.__name__ = tool_name
-                tool_func.__doc__ = tool_func.__doc__.format(resource=resource, model=model)
-                tool_func.__signature__ = inspect.Signature(sig_params)
-                mcp.tool(name=tool_name)(tool_func)
-            make_delete_tool(resource, url, delete_model)
-
+        if delete_model is not None:
+            make_tool("delete", resource, url, delete_model)
         # POST/PUT tool
-        def make_post_put_tool(resource, url, model):
-            tool_name = f"postput_{resource.value}"
-            data_type = Optional[model]
-            sig_params = [
-                inspect.Parameter('action', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
-                inspect.Parameter('resource_id', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=Optional[int], default=None),
-                inspect.Parameter('data', inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=data_type, default=None)
-            ]
-            def tool_func(action, resource_id=None, data=None):
-                """
-                POST/PUT {resource.value} resource to Clockodo API.
+        if post_put_model is not None:
+            make_tool("create/update", resource, url, post_put_model)
 
-                Args:
-                    action (str): 'create' for POST, 'update' for PUT.
-                    resource_id (Optional[int]): The resource ID for update operations.
-                    data (Optional[{model.__name__}]): The payload for create or update operations.
-
-                Returns:
-                    dict: The API response from Clockodo.
-                """
-                headers = AUTH_HEADERS
-                if action == "create":
-                    payload = data.model_dump() if hasattr(data, 'model_dump') else data
-                    resp = requests.post(url, headers=headers, json=payload)
-                    return resp.json()
-                elif action == "update":
-                    if resource_id is None:
-                        return {"error": "resource_id is required for update action"}
-                    endpoint = f"{url}/{resource_id}"
-                    payload = data.model_dump() if hasattr(data, 'model_dump') else data
-                    resp = requests.put(endpoint, headers=headers, json=payload)
-                    return resp.json()
-                else:
-                    return {"error": "Invalid action (must be 'create' or 'update')"}
-            tool_func.__name__ = tool_name
-            tool_func.__doc__ = tool_func.__doc__.format(resource=resource, model=model)
-            tool_func.__signature__ = inspect.Signature(sig_params)
-            mcp.tool(name=tool_name)(tool_func)
-        make_post_put_tool(resource, url, post_put_model)
     
 def main():
     create_tools()
