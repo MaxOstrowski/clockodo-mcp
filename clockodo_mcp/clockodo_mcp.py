@@ -170,7 +170,7 @@ def make_tool(action: str, resource, url, model):
                 method = "GET"
             elif action == "delete":
                 method = "DELETE"
-            elif action == "create/update":
+            elif action == "create_update":
                 if resource_id is not None:
                     method = "PUT"
                 else:
@@ -201,7 +201,7 @@ def create_tools():
             make_tool("delete", resource, url, delete_model)
         # POST/PUT tool
         if post_put_model is not None:
-            make_tool("create/update", resource, url, post_put_model)
+            make_tool("create_update", resource, url, post_put_model)
 
     
 def main():
