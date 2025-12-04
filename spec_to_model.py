@@ -25,11 +25,15 @@ class SchemaExtractor:
 
 	### this is bad to do this on the string level, but for now it works
 	def get_dependencies(self, code: str) -> List[str]:
-		# Find referenced model/enum names in the code
-		# Only look for identifiers that are capitalized (class names)
+		# Find referenced model/enum/type alias names in the code
+		# Match both capitalized and lowercase identifiers that are known models/enums
 		import re
-		# This regex matches capitalized identifiers (model/enum names)
-		return re.findall(r'\b([A-Z][A-Za-z0-9_]*)\b', code)
+		# Collect all known names (models and enums)
+		known_names = set(self.models.keys()) | set(self.enums.keys())
+		# Regex matches all word-like identifiers
+		identifiers = re.findall(r'\b([A-Za-z_][A-Za-z0-9_]*)\b', code)
+		# Return only those that are in known_names (excluding self-dependencies in topo_sort)
+		return [name for name in identifiers if name in known_names]
 
 	def topo_sort(self, items: Dict[str, str]) -> List[str]:
 		# Topological sort of items by dependencies
@@ -71,6 +75,21 @@ class SchemaExtractor:
 			union_type_str = f"Union[{', '.join(union_types)}]"
 			# Generate a type alias for the union
 			self.models[name] = f"{name} = {union_type_str}"
+			return name
+		# Handle top-level primitive type schemas (type: boolean, integer, string, number, array)
+		t = schema.get("type")
+		if t in ["boolean", "integer", "string", "number"]:
+			py_type = {
+				"boolean": "bool",
+				"integer": "int",
+				"string": "str",
+				"number": "float"
+			}
+			self.models[name] = f"{name} = {py_type[t]}"
+			return name
+		if t == "array":
+			item_type = self.extract_schema(schema["items"], name + "Item")
+			self.models[name] = f"{name} = List[{item_type}]"
 			return name
 		if schema.get("type") == "object":
 			model_name = name
