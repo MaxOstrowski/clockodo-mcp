@@ -26,8 +26,13 @@ class SchemaExtractor:
 		self.models = {}
 
 	def extract_schema(self, schema: Dict[str, Any], name: str = "Model") -> str:
+		# Always return the model/enum name, only store code in self.models/self.enums
 		if "$ref" in schema:
 			ref = schema["$ref"].split("/")[-1]
+			ref_schema = self.spec.get("components", {}).get("schemas", {}).get(ref)
+			if ref_schema and "enum" in ref_schema:
+				# Always reference the enum class name
+				return ref + "Enum"
 			return ref
 		if schema.get("type") == "object":
 			model_name = name
@@ -54,14 +59,37 @@ class SchemaExtractor:
 					field_type = self.extract_schema(prop_schema, nested_name)
 				else:
 					field_type = self.extract_schema(prop_schema, prop.capitalize())
-				is_optional = prop not in required
+				# Determine nullability
+				t = prop_schema.get("type")
+				is_nullable = False
+				if isinstance(t, list):
+					is_nullable = "null" in t
+				elif t == "null":
+					is_nullable = True
+				# Required and nullable: Optional[...] (no default)
+				# Required and not nullable: type (no default)
+				# Not required: Optional[...] = None
 				field_args = []
 				if "description" in prop_schema:
-					field_args.append(f'description="{prop_schema["description"]}"')
+					desc = prop_schema["description"].replace('"', '\"').replace("\n", "\\n")
+					field_args.append(f'description="{desc}"')
 				if "example" in prop_schema:
 					field_args.append(f'example={repr(prop_schema["example"])}')
 				field_args_str = f"Field(None, {', '.join(field_args)})" if field_args else "None"
-				field_str = f"    {prop}: {'Optional[' if is_optional else ''}{field_type}{']' if is_optional else ''} = {field_args_str}"
+				if prop in required:
+					if is_nullable:
+						field_str = f"    {prop}: Optional[{field_type}]"
+					else:
+						field_str = f"    {prop}: {field_type}"
+				else:
+					field_str = f"    {prop}: Optional[{field_type}] = None"
+				if field_args:
+					# Add Field(...) if there are extra args
+					if prop in required:
+						field_str += f" = {field_args_str}"
+					else:
+						# Already has = None
+						field_str = field_str.replace("= None", f"= {field_args_str}")
 				fields.append(field_str)
 			class_code = f"class {model_name}(BaseModel):\n" + ("\n".join(fields) if fields else "    pass")
 			self.models[model_name] = class_code
@@ -105,12 +133,11 @@ class SchemaExtractor:
 				else:
 					return "Any"
 				
-	def extract_path_inputs_and_json_schemas(self, path_def: Dict[str, Any], endpoint_name: str = "endpoint") -> dict[str, str]:
+	def extract_path_inputs_and_json_schemas(self, path_def: Dict[str, Any], endpoint_name: str = "endpoint") -> None:
 		"""
 		Extract input models and their JSON schemas for a single path endpoint definition.
 		Returns a dict: {method: {model: str, json_schema: dict}}
 		"""
-		result = {}
 		for method, details in path_def.items():
 			input_models = {}
 			# Parameters
@@ -132,33 +159,36 @@ class SchemaExtractor:
 			model_code = f"class {model_name}(BaseModel):\n"
 			for pname, model_info in input_models.items():
 				model_code += f"    {pname}: {model_info['model']}\n"
-			result[model_name] = {"model": model_code, "json_schema": None}
-		return result
+			if len(input_models) == 0:
+				model_code += "    pass\n"
+			self.models[model_name] = model_code
 
-	def extract_all(self) -> Dict[str, str]:
-		self.enums = {}
-		self.models = {}
+
+	def extract_all(self) -> None:
 		schemas = self.spec.get("components", {}).get("schemas", {})
 		for schema_name, schema_def in schemas.items():
-			model_code = self.extract_schema(schema_def, schema_name)
-			self.models[schema_name] = model_code
+			self.extract_schema(schema_def, schema_name)
 
-		print("# Path endpoint input models and their JSON schemas\n")
 		paths = self.spec.get("paths", {})
 		for path, path_def in paths.items():
 			endpoint_name = path.strip("/").replace("/", "_") or "root"
-			inputs = self.extract_path_inputs_and_json_schemas(path_def, endpoint_name)
-			for name, model_code in inputs.items():
-				self.models[name] = model_code["model"]
-		return self.models
+			self.extract_path_inputs_and_json_schemas(path_def, endpoint_name)
 
 def main():
 	spec = load_openapi_yaml("openapi.yaml")
 
+	print("from pydantic import BaseModel, Field")
+	print("from typing import List, Optional, Union, Any")
+	print("from enum import Enum, IntEnum\n")
+
 	extractor = SchemaExtractor(spec)
-	all_classes = extractor.extract_all()
+	extractor.extract_all()
+	print("# All extracted Enums\n")
+	for name, code in extractor.enums.items():
+		print(code)
+		print()
 	print("# All referenced schemas as Pydantic models\n")
-	for name, code in all_classes.items():
+	for name, code in extractor.models.items():
 		print(code)
 		print()
 if __name__ == "__main__":
