@@ -1,11 +1,9 @@
-
 import yaml
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 from enum import Enum, IntEnum
 
 import re
-
 
 def sanitize_name(val):
     # Replace non-alphanumeric with underscores
@@ -25,6 +23,33 @@ class SchemaExtractor:
 		self.enums = {}
 		self.models = {}
 
+	### this is bad to do this on the string level, but for now it works
+	def get_dependencies(self, code: str) -> List[str]:
+		# Find referenced model/enum names in the code
+		# Only look for identifiers that are capitalized (class names)
+		import re
+		# This regex matches capitalized identifiers (model/enum names)
+		return re.findall(r'\b([A-Z][A-Za-z0-9_]*)\b', code)
+
+	def topo_sort(self, items: Dict[str, str]) -> List[str]:
+		# Topological sort of items by dependencies
+		graph = {name: set(self.get_dependencies(code)) for name, code in items.items()}
+		# Remove self-dependencies and filter to only known items
+		for name in graph:
+			graph[name] = {dep for dep in graph[name] if dep in items and dep != name}
+		visited = set()
+		result = []
+		def visit(n):
+			if n in visited:
+				return
+			visited.add(n)
+			for dep in graph[n]:
+				visit(dep)
+			result.append(n)
+		for n in items:
+			visit(n)
+		return result
+
 	def extract_schema(self, schema: Dict[str, Any], name: str = "Model") -> str:
 		# Always return the model/enum name, only store code in self.models/self.enums
 		if "$ref" in schema:
@@ -34,6 +59,19 @@ class SchemaExtractor:
 				# Always reference the enum class name
 				return ref + "Enum"
 			return ref
+		if "oneOf" in schema:
+			# Handle oneOf schemas as Union types
+			union_types = []
+			for subschema in schema["oneOf"]:
+				if "$ref" in subschema:
+					ref = subschema["$ref"].split("/")[-1]
+					union_types.append(self.extract_schema({"$ref": subschema["$ref"]}, ref))
+				else:
+					union_types.append(self.extract_schema(subschema, name + "Sub"))
+			union_type_str = f"Union[{', '.join(union_types)}]"
+			# Generate a type alias for the union
+			self.models[name] = f"{name} = {union_type_str}"
+			return name
 		if schema.get("type") == "object":
 			model_name = name
 			if model_name in self.models:
@@ -47,8 +85,22 @@ class SchemaExtractor:
 					enum_name = prop.capitalize() + "Enum"
 					enum_type = "IntEnum" if prop_schema.get("type") == "integer" else "Enum"
 					enum_values = prop_schema["enum"]
-					enum_names = prop_schema.get("x-enumNames", [sanitize_name(str(v)) for v in enum_values])
-					enum_items = "\n".join([f"    {name} = {repr(value)}" for name, value in zip(enum_names, enum_values)])
+					enum_names = prop_schema.get("x-enumNames", [])
+					# Fallback for missing names or empty string values
+					fallback_names = []
+					for i, v in enumerate(enum_values):
+						if enum_names and i < len(enum_names):
+							name = enum_names[i]
+						else:
+							if v == "":
+								name = "EMPTY"
+							else:
+								name = sanitize_name(str(v))
+						# Ensure valid Python identifier
+						if not name or not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', name):
+							name = f"VALUE_{i}"
+						fallback_names.append(name)
+					enum_items = "\n".join([f"    {name} = {repr(value)}" for name, value in zip(fallback_names, enum_values)])
 					enum_code = f"class {enum_name}({enum_type}):\n{enum_items}\n"
 					if enum_name not in self.enums:
 						self.enums[enum_name] = enum_code
@@ -103,8 +155,18 @@ class SchemaExtractor:
 				enum_name = name + "Enum"
 				enum_type = "IntEnum" if t == "integer" else "Enum"
 				enum_values = schema["enum"]
-				enum_names = schema.get("x-enumNames", [sanitize_name(str(v)) for v in enum_values])
-				enum_items = "\n".join([f"    {name} = {repr(value)}" for name, value in zip(enum_names, enum_values)])
+				enum_names = schema.get("x-enumNames", [])
+				fallback_names = []
+				for i, v in enumerate(enum_values):
+					if enum_names and i < len(enum_names):
+						name = enum_names[i]
+					else:
+						if v == "":
+							name = "EMPTY"
+						else:
+							name = sanitize_name(str(v))
+					fallback_names.append(name)
+				enum_items = "\n".join([f"    {name} = {repr(value)}" for name, value in zip(fallback_names, enum_values)])
 				enum_code = f"class {enum_name}({enum_type}):\n{enum_items}\n"
 				if enum_name not in self.enums:
 					self.enums[enum_name] = enum_code
@@ -183,13 +245,16 @@ def main():
 
 	extractor = SchemaExtractor(spec)
 	extractor.extract_all()
+	# Topologically sort enums and models
+	enum_order = extractor.topo_sort(extractor.enums)
+	model_order = extractor.topo_sort(extractor.models)
 	print("# All extracted Enums\n")
-	for name, code in extractor.enums.items():
-		print(code)
+	for name in enum_order:
+		print(extractor.enums[name])
 		print()
 	print("# All referenced schemas as Pydantic models\n")
-	for name, code in extractor.models.items():
-		print(code)
+	for name in model_order:
+		print(extractor.models[name])
 		print()
 if __name__ == "__main__":
 	main()

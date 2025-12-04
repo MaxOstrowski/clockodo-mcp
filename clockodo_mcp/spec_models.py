@@ -331,7 +331,7 @@ class Holiday_fixed_creditEnum(Enum):
 
 
 class PresetEnum(Enum):
-     = ''
+    EMPTY = ''
 
 
 class v2_workTimes_changeRequests_get_scope_InputModelEnum(Enum):
@@ -798,6 +798,8 @@ class AbsenceHourAbsenceV4(BaseModel):
     date_approved: Optional[Union[str, None]] = Field(None, description="Only with access rights for absence administration or in case of own absences")
     approved_by: Optional[Union[int, None]] = Field(None, description="Only with access rights for absence administration or in case of own absences")
 
+AbsenceV4 = Union[AbsenceHourAbsenceV4, AbsenceDayAbsenceV4]
+
 class AccessGroupV2(BaseModel):
     id: int = Field(None, example=10)
     name: str = Field(None, example='Marketing')
@@ -806,10 +808,96 @@ class AccessGroupV2(BaseModel):
     has_master_data_access: Optional[Union[bool, None]] = Field(None, description="The access group contains master data access (customers, projects, services). `null` in case of disabled project times module.")
     company_default: bool = Field(None, description="The access group is one of the company default access groups.")
 
+class WorkTimeRegulationV3(BaseModel):
+    id: int = Field(None, example=10)
+    name: Optional[str] = Field(None, description="Only visible for owners or workers with elevated access `manage_users_work_time_settings`", example='Germany')
+    add_to_worktime: bool = Field(None, example=False)
+    daily_max: float = Field(None, example=10)
+    weekly_max: float = Field(None, example=60)
+    interval_max: float = Field(None, example=6)
+
+Worktime_regulation = Union[WorkTimeRegulationV3, Any]
+
+Work_time_edit_lock_days = Union[WorkTimeEditLockDayEnum, Any]
+
+Wage_type = Union[WageTypeEnum, Any]
+
+Edit_lock_dyn = Union[EditLockDayEnum, Any]
+
+class UserV1(BaseModel):
+    id: int
+    name: Optional[Union[str, None]]
+    number: Optional[Union[str, None]] = None
+    email: Optional[str] = None
+    role: Optional[RoleEnum] = None
+    active: bool
+    timeformat_12h: bool
+    weekstart_monday: Optional[Union[bool, None]]
+    weekend_friday: Optional[Union[bool, None]]
+    language: LanguageEnum
+    timezone: str
+    wage_type: Optional[Wage_type] = None
+    can_generally_see_absences: Optional[bool] = None
+    can_generally_manage_absences: Optional[bool] = None
+    can_add_customers: Optional[bool] = None
+    worktime_regulation_id: Optional[Union[int, None]] = None
+    teams_id: Optional[Union[int, None]]
+    initials: Optional[Union[str, None]]
+    nonbusinessgroups_id: Optional[Union[int, None]]
+    boss: Optional[Union[int, None]] = None
+    absence_managers_id: Optional[List[int]] = None
+    default_holidays_count: Optional[bool] = None
+    default_target_hours: Optional[bool] = None
+    edit_lock: Optional[Union[str, None]] = None
+    edit_lock_dyn: Optional[Edit_lock_dyn] = None
+    edit_lock_sync: Optional[Union[bool, None]] = None
+    work_time_edit_lock_days: Optional[Work_time_edit_lock_days] = None
+    creator: Optional[Union[int, None]] = None
+    support_pin: Optional[str] = None
+
+class CompanyTargetHoursDefaultNodeV1(BaseModel):
+    monday: float
+    tuesday: float
+    wednesday: float
+    thursday: float
+    friday: float
+    saturday: float
+    sunday: float
+
+class CompanyV1(BaseModel):
+    id: int
+    name: str
+    timezone_default: str
+    currency: Optional[Union[str, None]]
+    allow_entries_text_multiline: bool
+    allow_entries_for_customers: bool
+    allow_entry_overlaps: bool
+    force_linked_entry_times: bool
+    default_customers_id: Optional[Union[int, None]]
+    default_services_id: Optional[Union[int, None]]
+    module_absence: bool
+    module_work_time: bool
+    module_targethours: bool
+    module_target_hours: bool
+    module_userreports: bool
+    module_user_reports: bool
+    module_project_times: bool
+    module_entries_texts: bool
+    nonbusiness_group_default: Optional[Union[int, None]]
+    onboarding_complete: bool
+    worktime_regulation_default: Optional[Union[int, None]]
+    worktime_evaluate_regulations_since: Optional[Union[str, None]]
+    worktime_force_breaks: int
+    holidays_count_default: float
+    absence_reduces_target_hours: bool
+    compensate_day_default: float
+    compensate_month_default: float
+    target_hours_default: CompanyTargetHoursDefaultNodeV1
+
 class AggregatesUsersMeV2(BaseModel):
     user: UserV1
     company: CompanyV1
-    worktime_regulation: Any
+    worktime_regulation: Worktime_regulation
 
 class AllowedValues(BaseModel):
     allowedValues: List[Any]
@@ -952,6 +1040,10 @@ class BilledMoneyCanOnlyBeSetWithHardBudgetError(BaseModel):
     path: Optional[Union[str, None]] = None
     details: Optional[Any] = None
 
+class BlockingAccessDependencies(BaseModel):
+    access_name: str = Field(None, description="The access you were trying to remove", example='see_absences')
+    elevated_access_dependencies: Optional[List[str]] = Field(None, description="Elevated access dependencies that are blocking", example=['see_work_time', 'manage_work_time'])
+
 class BlockingAccessDependenciesError(BaseModel):
     type: Optional[str] = Field(None, example='BlockingAccessDependencies')
     message: Optional[Union[str, None]] = Field(None, example='Blocking dependencies need to be removed beforehand.')
@@ -964,17 +1056,35 @@ class BossCannotBeArchivedError(BaseModel):
     path: Optional[Union[str, None]] = None
     details: Optional[Any] = None
 
+class SubprojectBudgetV3(BaseModel):
+    monetary: bool
+    hard: bool
+    from_subprojects: bool
+    amount: Optional[Union[float, None]]
+    notification_thresholds: List[ThresholdsEnum]
+
+Budget = Union[SubprojectBudgetV3, Any]
+
 class BudgetIsRequiredForRetainerProjectError(BaseModel):
     type: Optional[str] = Field(None, example='BudgetIsRequiredForRetainerProject')
     message: Optional[Union[str, None]] = Field(None, example='Budget is required for retainer projects.')
     path: Optional[Union[str, None]] = None
     details: Optional[Any] = None
 
+class NotBetween(BaseModel):
+    min: float = Field(None, example=0)
+    max: float = Field(None, example=10000)
+    inclusive: bool = Field(None, description="Are the minimum and maximum values allowed", example=True)
+
 class BudgetTotalBelowSubprojectBudgetSumError(BaseModel):
     type: Optional[str] = Field(None, example='BudgetTotalBelowSubprojectBudgetSum')
     message: Optional[Union[str, None]] = Field(None, example='The project budget may not fall below the total budget of all subprojects.')
     path: Optional[Union[str, None]] = None
     details: Optional[NotBetween] = None
+
+class BudgetTotalErrorDetails(BaseModel):
+    max: float = Field(None, example=10000)
+    budget_is_hours: bool = Field(None, example=True)
 
 class BudgetTotalError(BaseModel):
     type: Optional[str] = Field(None, example='BudgetTotal')
@@ -1030,11 +1140,89 @@ class CannotRemoveBudgetBecauseOfSubprojectBudgetsError(BaseModel):
     path: Optional[Union[str, None]] = None
     details: Optional[Any] = None
 
-class ClockStartStopV2_RunningModel(BaseModel):
-    pass
+class EntryV2Time(BaseModel):
+    id: int = Field(None, example=10)
+    customers_id: int = Field(None, example=10)
+    projects_id: Optional[Union[int, None]]
+    subprojects_id: Optional[Union[int, None]]
+    users_id: int
+    billable: int
+    texts_id: Optional[Union[int, None]]
+    text: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true")
+    time_since: str = Field(None, example='2023-02-28T00:00:00Z')
+    time_until: Optional[Union[str, None]] = Field(None, example='2023-02-28T00:00:00Z')
+    time_insert: str = Field(None, example='2023-02-28Z00:00:00Z')
+    time_last_change: str = Field(None, example='2023-02-28T00:00:00Z')
+    test_data: bool
+    customers_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Hotel Bergblick')
+    projects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Publicity campaign')
+    subprojects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Social media ads')
+    users_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Max Mustermann')
+    revenue: Optional[float] = Field(None, description="Only with necessary access rights and if enhanced_list=true", example=999.9)
+    type: TypeEnum = Field(None, description="Entry type: 1 = time, 2 = lump sum service, 3 = lump sum value.")
+    services_id: Optional[Union[int, None]]
+    duration: Optional[Union[int, None]]
+    time_last_change_work_time: str = Field(None, example='2023-02-28T00:00:00Z')
+    time_clocked_since: Optional[Union[str, None]] = Field(None, example='2023-02-28T00:00:00Z')
+    clocked: bool
+    clocked_offline: bool
+    hourly_rate: Optional[float] = Field(None, description="Only with necessary access rights and if enhanced_list=true", example=99.99)
+    services_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='SEO service')
 
-class ClockStartStopV2_StoppedModel(BaseModel):
-    pass
+class EntryV2LumpsumService(BaseModel):
+    id: int = Field(None, example=10)
+    customers_id: int = Field(None, example=10)
+    projects_id: Optional[Union[int, None]]
+    subprojects_id: Optional[Union[int, None]]
+    users_id: int
+    billable: int
+    texts_id: Optional[Union[int, None]]
+    text: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true")
+    time_since: str = Field(None, example='2023-02-28T00:00:00Z')
+    time_until: Optional[Union[str, None]] = Field(None, example='2023-02-28T00:00:00Z')
+    time_insert: str = Field(None, example='2023-02-28Z00:00:00Z')
+    time_last_change: str = Field(None, example='2023-02-28T00:00:00Z')
+    test_data: bool
+    customers_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Hotel Bergblick')
+    projects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Publicity campaign')
+    subprojects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Social media ads')
+    users_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Max Mustermann')
+    revenue: Optional[float] = Field(None, description="Only with necessary access rights and if enhanced_list=true", example=999.9)
+    type: TypeEnum = Field(None, description="Entry type: 1 = time, 2 = lump sum service, 3 = lump sum value.")
+    services_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='SEO service')
+    lumpsum_services_id: Optional[Union[int, None]]
+    lumpsum_services_amount: float = Field(None, example=99.99)
+    lumpsum_services_price: Optional[float] = Field(None, description="Only if enhanced_list=true", example=99.99)
+
+class EntryV2LumpsumValue(BaseModel):
+    id: int = Field(None, example=10)
+    customers_id: int = Field(None, example=10)
+    projects_id: Optional[Union[int, None]]
+    subprojects_id: Optional[Union[int, None]]
+    users_id: int
+    billable: int
+    texts_id: Optional[Union[int, None]]
+    text: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true")
+    time_since: str = Field(None, example='2023-02-28T00:00:00Z')
+    time_until: Optional[Union[str, None]] = Field(None, example='2023-02-28T00:00:00Z')
+    time_insert: str = Field(None, example='2023-02-28Z00:00:00Z')
+    time_last_change: str = Field(None, example='2023-02-28T00:00:00Z')
+    test_data: bool
+    customers_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Hotel Bergblick')
+    projects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Publicity campaign')
+    subprojects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Social media ads')
+    users_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Max Mustermann')
+    revenue: Optional[float] = Field(None, description="Only with necessary access rights and if enhanced_list=true", example=999.9)
+    type: TypeEnum = Field(None, description="Entry type: 1 = time, 2 = lump sum value, 3 = lump sum service.")
+    services_id: Optional[Union[int, None]]
+    lumpsum: float = Field(None, example=99.99)
+    services_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='SEO service')
+
+EntryV2 = Union[EntryV2Time, EntryV2LumpsumValue, EntryV2LumpsumService]
+
+ClockStartStopV2_RunningModel = Union[EntryV2, Any]
+
+ClockStartStopV2_StoppedModel = Union[EntryV2, Any]
 
 class ClockStartStopV2(BaseModel):
     running: ClockStartStopV2_RunningModel
@@ -1043,55 +1231,14 @@ class ClockStartStopV2(BaseModel):
     stopped_has_been_truncated: bool
     additional_message: Optional[str] = None
 
-class ClockV2_RunningModel(BaseModel):
-    pass
+ClockV2_RunningModel = Union[EntryV2, Any]
 
-class ClockV2_StoppedModel(BaseModel):
-    pass
+ClockV2_StoppedModel = Union[EntryV2, Any]
 
 class ClockV2(BaseModel):
     running: ClockV2_RunningModel
     stopped: ClockV2_StoppedModel
     current_time: str = Field(None, example='2023-02-28T00:00:00Z')
-
-class CompanyTargetHoursDefaultNodeV1(BaseModel):
-    monday: float
-    tuesday: float
-    wednesday: float
-    thursday: float
-    friday: float
-    saturday: float
-    sunday: float
-
-class CompanyV1(BaseModel):
-    id: int
-    name: str
-    timezone_default: str
-    currency: Optional[Union[str, None]]
-    allow_entries_text_multiline: bool
-    allow_entries_for_customers: bool
-    allow_entry_overlaps: bool
-    force_linked_entry_times: bool
-    default_customers_id: Optional[Union[int, None]]
-    default_services_id: Optional[Union[int, None]]
-    module_absence: bool
-    module_work_time: bool
-    module_targethours: bool
-    module_target_hours: bool
-    module_userreports: bool
-    module_user_reports: bool
-    module_project_times: bool
-    module_entries_texts: bool
-    nonbusiness_group_default: Optional[Union[int, None]]
-    onboarding_complete: bool
-    worktime_regulation_default: Optional[Union[int, None]]
-    worktime_evaluate_regulations_since: Optional[Union[str, None]]
-    worktime_force_breaks: int
-    holidays_count_default: float
-    absence_reduces_target_hours: bool
-    compensate_day_default: float
-    compensate_month_default: float
-    target_hours_default: CompanyTargetHoursDefaultNodeV1
 
 class CompletionIsForbiddenBySubprojectBudgetError(BaseModel):
     type: Optional[str] = Field(None, example='CompletionIsForbiddenBySubprojectBudget')
@@ -1124,10 +1271,22 @@ class CustomerV3(BaseModel):
     bill_service_id: Optional[Union[str, None]] = Field(None, description="Only visible for owners or workers with elevated access `manage_customers_and_projects` and if a billing application with customers support is linked up", example='1234')
     test_data: bool
 
+Id = Union[str, int]
+
+class UsersAccessServiceRestrictedAccessV2(BaseModel):
+    id: Id
+    hasAccess: bool
+
+Add = Union[bool, List[UsersAccessServiceRestrictedAccessV2]]
+
+Report = Union[general_access_v2, custom_access_v2]
+
+Edit = Union[general_access_v2, custom_access_v2]
+
 class customer_projects_access_v2(BaseModel):
-    add: Optional[Any] = Field(None, example=True)
-    report: Optional[Any] = Field(None, example={'123': True, '456': True})
-    edit: Optional[Any] = Field(None, example={'123': True, '456': {'projects': {'789': True}}})
+    add: Optional[Add] = Field(None, example=True)
+    report: Optional[Report] = Field(None, example={'123': True, '456': True})
+    edit: Optional[Edit] = Field(None, example={'123': True, '456': {'projects': {'789': True}}})
 
 class DeleteCompanyDefaultIsNotAllowedError(BaseModel):
     type: Optional[str] = Field(None, example='DeleteCompanyDefaultIsNotAllowed')
@@ -1141,14 +1300,16 @@ class DuplicateEntryForUserAndYearError(BaseModel):
     path: Optional[Union[str, None]] = None
     details: Optional[Any] = None
 
-class ClockDurationV2_RunningModel(BaseModel):
-    pass
+ClockDurationV2_RunningModel = Union[EntryV2, Any]
 
 class ClockDurationV2(BaseModel):
     updated: EntryV2
     running: ClockDurationV2_RunningModel
     overlapping_correction: Optional[Union[Any, None]]
     current_time: str = Field(None, example='2023-02-28T00:00:00Z')
+
+class Resource(BaseModel):
+    resources: List[str] = Field(None, description="One or more affected resources", example=['customers', 'users'])
 
 class EmailNotAvailableError(BaseModel):
     type: Optional[str] = Field(None, example='EmailNotAvailable')
@@ -1177,6 +1338,8 @@ class EntryGroupConfirmUpdateV2(BaseModel):
     confirm_key: str
     affected_entries: int
 
+Billable = Union[BillableDistinctEnum, Any]
+
 class EntryGroupRestrictionV2(BaseModel):
     users_id: Optional[Union[int, None]]
     teams_id: Optional[Union[int, None]]
@@ -1185,7 +1348,7 @@ class EntryGroupRestrictionV2(BaseModel):
     subprojects_id: Optional[Union[int, None]]
     services_id: Optional[Union[int, None]]
     lumpsum_services_id: Optional[Union[int, None]]
-    billable: Any
+    billable: Billable
     entriesTexts_id: Optional[Union[int, None]]
     budget_type: Optional[Union[str, None]]
 
@@ -1193,11 +1356,13 @@ class EntryGroupUpdateV2(BaseModel):
     success: bool
     edited_entries: int
 
+Restrictions = Union[EntryGroupNoRestrictionV2, EntryGroupRestrictionV2, Any]
+
 class EntryGroupV2(BaseModel):
     group: str = Field(None, description="Identifier of the current group")
     name: str = Field(None, description="Textual description of the current group")
     duration: int = Field(None, description="Duration of all time entries of the group")
-    restrictions: Any = Field(None, description="Restrictions that apply to the current group, except for the current grouped_by and time restrictions")
+    restrictions: Restrictions = Field(None, description="Restrictions that apply to the current group, except for the current grouped_by and time restrictions")
     revenue: int = Field(None, description="Revenue of all time entries in the group (only if necessary employee rights for the group)")
     has_budget_revenues_billed: bool = Field(None, description="Does the group have at least one time entry that uses the hard project budget and has already been billed? (only if necessary employee rights for the group)")
     has_budget_revenues_not_billed: bool = Field(None, description="Does the group have at least one time entry that uses a hard project budget and has not yet been billed? (Only if necessary employee rights for the group)")
@@ -1320,31 +1485,6 @@ class LumpSumServiceV4(BaseModel):
     number: Optional[Union[str, None]] = Field(None, description="Lump sum service number", example='Travel-123')
     note: Optional[Union[str, None]] = Field(None, description="Only visible for owners or workers with elevated access `manage_services`", example='Travel costs for the trip to the customer')
 
-class EntryV2LumpsumService(BaseModel):
-    id: int = Field(None, example=10)
-    customers_id: int = Field(None, example=10)
-    projects_id: Optional[Union[int, None]]
-    subprojects_id: Optional[Union[int, None]]
-    users_id: int
-    billable: int
-    texts_id: Optional[Union[int, None]]
-    text: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true")
-    time_since: str = Field(None, example='2023-02-28T00:00:00Z')
-    time_until: Optional[Union[str, None]] = Field(None, example='2023-02-28T00:00:00Z')
-    time_insert: str = Field(None, example='2023-02-28Z00:00:00Z')
-    time_last_change: str = Field(None, example='2023-02-28T00:00:00Z')
-    test_data: bool
-    customers_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Hotel Bergblick')
-    projects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Publicity campaign')
-    subprojects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Social media ads')
-    users_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Max Mustermann')
-    revenue: Optional[float] = Field(None, description="Only with necessary access rights and if enhanced_list=true", example=999.9)
-    type: TypeEnum = Field(None, description="Entry type: 1 = time, 2 = lump sum service, 3 = lump sum value.")
-    services_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='SEO service')
-    lumpsum_services_id: Optional[Union[int, None]]
-    lumpsum_services_amount: float = Field(None, example=99.99)
-    lumpsum_services_price: Optional[float] = Field(None, description="Only if enhanced_list=true", example=99.99)
-
 class MaxUsersOfPlanTypeReachedError(BaseModel):
     type: Optional[str] = Field(None, example='MaxUsersOfPlanTypeReached')
     message: Optional[Union[str, None]] = Field(None, example='You have reached the maximum number of co-workers included in your subscription. Please upgrade your plan in the payment section.')
@@ -1363,11 +1503,17 @@ class MissingManageUsersAccessError(BaseModel):
     path: Optional[Union[str, None]] = None
     details: Optional[Any] = None
 
+class MissingManageUsersAccessForAssigningAccessGroup(BaseModel):
+    access_groups_ids: List[int] = Field(None, description="The access groups with elevated access")
+
 class MissingManageUsersAccessForAssigningAccessGroupError(BaseModel):
     type: Optional[str] = Field(None, example='MissingManageUsersAccessForAssigningAccessGroup')
     message: Optional[Union[str, None]] = Field(None, example='You are not allowed to assign groups with elevated access to users.')
     path: Optional[Union[str, None]] = None
     details: Optional[MissingManageUsersAccessForAssigningAccessGroup] = None
+
+class MissingManageUsersAccessForRemovingAccessGroup(BaseModel):
+    access_groups_ids: List[int] = Field(None, description="The access groups with elevated access")
 
 class MissingManageUsersAccessForRemovingAccessGroupError(BaseModel):
     type: Optional[str] = Field(None, example='MissingManageUsersAccessForRemovingAccessGroup')
@@ -1398,15 +1544,6 @@ class NotBetweenError(BaseModel):
     message: Optional[Union[str, None]] = Field(None, example='An error occurred, please try again.')
     path: Optional[Union[str, None]] = None
     details: Optional[NotBetween] = None
-
-class NotBetween(BaseModel):
-    min: float = Field(None, example=0)
-    max: float = Field(None, example=10000)
-    inclusive: bool = Field(None, description="Are the minimum and maximum values allowed", example=True)
-
-class BudgetTotalErrorDetails(BaseModel):
-    max: float = Field(None, example=10000)
-    budget_is_hours: bool = Field(None, example=True)
 
 class OnlyOwnerCanDeleteOwnerError(BaseModel):
     type: Optional[str] = Field(None, example='OnlyOwnerCanDeleteOwner')
@@ -1505,6 +1642,8 @@ class ProjectsReportRetainerSubprojectReportItemV4(BaseModel):
     subprojects_name: str
     subprojects_number: Optional[Union[str, None]]
 
+ProjectsReportReportItemV4 = Union[ProjectsReportProjectReportItemV4, ProjectsReportRetainerSubprojectReportItemV4]
+
 class ProjectV4(BaseModel):
     id: int = Field(None, example=10)
     customers_id: int
@@ -1535,6 +1674,29 @@ class RateV3(BaseModel):
     test_data: bool = Field(None, example=False)
     children: List[RateV3] = Field(None, example=[])
 
+class SettingPriceFormatV1(BaseModel):
+    example: float
+    format: str
+
+class SettingAccessV1(BaseModel):
+    addCustomers: bool
+
+class SettingV1(BaseModel):
+    name: str
+    email: str
+    role: RoleEnum
+    access: SettingAccessV1
+    price_format: SettingPriceFormatV1
+    timeformat_12h: bool
+    weekstart_monday: bool
+    weekend_friday: bool
+    language: LanguageEnum
+    currency: str
+    currency_symbol: str
+    timezone: str
+    support_pin: str
+    allowEntriesTextMultiline: bool
+
 class RegisterV1(BaseModel):
     success: bool
     user: SettingV1
@@ -1559,14 +1721,14 @@ class ResourceConflictFoundError(BaseModel):
     path: Optional[Union[str, None]] = None
     details: Optional[Resource] = None
 
-class Resource(BaseModel):
-    resources: List[str] = Field(None, description="One or more affected resources", example=['customers', 'users'])
-
 class ResourceNotFoundError(BaseModel):
     type: Optional[str] = Field(None, example='ResourceNotFound')
     message: Optional[Union[str, None]] = Field(None, example='The requested resource could not be found.')
     path: Optional[Union[str, None]] = None
     details: Optional[Any] = None
+
+class ResourcesInactive(BaseModel):
+    inactive_ids: List[int] = Field(None, description="One or more ids of inactive resources", example=[99999])
 
 class ResourcesInactiveError(BaseModel):
     type: Optional[str] = Field(None, example='ResourcesInactive')
@@ -1574,17 +1736,14 @@ class ResourcesInactiveError(BaseModel):
     path: Optional[Union[str, None]] = None
     details: Optional[ResourcesInactive] = None
 
-class ResourcesInactive(BaseModel):
-    inactive_ids: List[int] = Field(None, description="One or more ids of inactive resources", example=[99999])
+class ResourcesNotFound(BaseModel):
+    not_found_ids: List[int] = Field(None, description="One or more ids of missing resources", example=[99999])
 
 class ResourcesNotFoundError(BaseModel):
     type: Optional[str] = Field(None, example='ResourcesNotFound')
     message: Optional[Union[str, None]] = Field(None, example='The requested resources could not be found.')
     path: Optional[Union[str, None]] = None
     details: Optional[ResourcesNotFound] = None
-
-class ResourcesNotFound(BaseModel):
-    not_found_ids: List[int] = Field(None, description="One or more ids of missing resources", example=[99999])
 
 class RunningEntriesPreventArchivingError(BaseModel):
     type: Optional[str] = Field(None, example='RunningEntriesPreventArchiving')
@@ -1598,8 +1757,11 @@ class RunningEntriesPreventDeletionError(BaseModel):
     path: Optional[Union[str, None]] = None
     details: Optional[Any] = None
 
+class AddSub(BaseModel):
+    pass
+
 class services_access_v2(BaseModel):
-    add: Optional[Any] = Field(None, example={'123': True, '456': True})
+    add: Optional[Add] = Field(None, example={'123': True, '456': True})
 
 class ServiceV4(BaseModel):
     id: int = Field(None, example=10)
@@ -1608,29 +1770,6 @@ class ServiceV4(BaseModel):
     active: bool
     note: Optional[Union[str, None]] = Field(None, description="Only visible for owners or workers with elevated access `manage_services`", example='Repair cost for the customer')
     bill_service_id: Optional[Union[str, None]] = Field(None, description="Only visible for owners or workers with elevated access `manage_services` and if a billing application with services support is linked up", example='1234')
-
-class SettingAccessV1(BaseModel):
-    addCustomers: bool
-
-class SettingPriceFormatV1(BaseModel):
-    example: float
-    format: str
-
-class SettingV1(BaseModel):
-    name: str
-    email: str
-    role: RoleEnum
-    access: SettingAccessV1
-    price_format: SettingPriceFormatV1
-    timeformat_12h: bool
-    weekstart_monday: bool
-    weekend_friday: bool
-    language: LanguageEnum
-    currency: str
-    currency_symbol: str
-    timezone: str
-    support_pin: str
-    allowEntriesTextMultiline: bool
 
 class ShouldNotHaveBudgetError(BaseModel):
     type: Optional[str] = Field(None, example='ShouldNotHaveBudget')
@@ -1681,13 +1820,6 @@ class SubprojectBudgetTypeNotEditableForBudgetSourceError(BaseModel):
     message: Optional[Union[str, None]] = Field(None, example='Budget type cannot be edited for this budget source configuration.')
     path: Optional[Union[str, None]] = None
     details: Optional[Any] = None
-
-class SubprojectBudgetV3(BaseModel):
-    monetary: bool
-    hard: bool
-    from_subprojects: bool
-    amount: Optional[Union[float, None]]
-    notification_thresholds: List[ThresholdsEnum]
 
 class SubprojectCompletionAnyRunningEntriesError(BaseModel):
     type: Optional[str] = Field(None, example='SubprojectCompletionAnyRunningEntries')
@@ -1761,7 +1893,7 @@ class SubprojectV3(BaseModel):
     name: str
     note: Optional[Union[str, None]] = None
     number: Optional[Union[str, None]]
-    budget: Optional[Any] = None
+    budget: Optional[Budget] = None
     billed: int
     billed_money: Optional[Union[float, None]]
     billed_completely: Optional[Union[bool, None]]
@@ -1805,39 +1937,6 @@ class TeamV3(BaseModel):
     name: str = Field(None, example='Marketing')
     leader: Optional[Union[int, None]] = Field(None, example=103)
 
-class BlockingAccessDependencies(BaseModel):
-    access_name: str = Field(None, description="The access you were trying to remove", example='see_absences')
-    elevated_access_dependencies: Optional[List[str]] = Field(None, description="Elevated access dependencies that are blocking", example=['see_work_time', 'manage_work_time'])
-
-class EntryV2Time(BaseModel):
-    id: int = Field(None, example=10)
-    customers_id: int = Field(None, example=10)
-    projects_id: Optional[Union[int, None]]
-    subprojects_id: Optional[Union[int, None]]
-    users_id: int
-    billable: int
-    texts_id: Optional[Union[int, None]]
-    text: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true")
-    time_since: str = Field(None, example='2023-02-28T00:00:00Z')
-    time_until: Optional[Union[str, None]] = Field(None, example='2023-02-28T00:00:00Z')
-    time_insert: str = Field(None, example='2023-02-28Z00:00:00Z')
-    time_last_change: str = Field(None, example='2023-02-28T00:00:00Z')
-    test_data: bool
-    customers_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Hotel Bergblick')
-    projects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Publicity campaign')
-    subprojects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Social media ads')
-    users_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Max Mustermann')
-    revenue: Optional[float] = Field(None, description="Only with necessary access rights and if enhanced_list=true", example=999.9)
-    type: TypeEnum = Field(None, description="Entry type: 1 = time, 2 = lump sum service, 3 = lump sum value.")
-    services_id: Optional[Union[int, None]]
-    duration: Optional[Union[int, None]]
-    time_last_change_work_time: str = Field(None, example='2023-02-28T00:00:00Z')
-    time_clocked_since: Optional[Union[str, None]] = Field(None, example='2023-02-28T00:00:00Z')
-    clocked: bool
-    clocked_offline: bool
-    hourly_rate: Optional[float] = Field(None, description="Only with necessary access rights and if enhanced_list=true", example=99.99)
-    services_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='SEO service')
-
 class UnexpectedValueError(BaseModel):
     type: Optional[str] = Field(None, example='UnexpectedValue')
     message: Optional[Union[str, None]] = Field(None, example='Only these values are expected: string')
@@ -1855,6 +1954,8 @@ class UntilMustBeInSameYearError(BaseModel):
     message: Optional[Union[str, None]] = Field(None, example='The "until" date must be in the same year as the "since" date.')
     path: Optional[Union[str, None]] = None
     details: Optional[Any] = None
+
+Edit_lock = Union[EditLockDayEnum, Any]
 
 class UserV3(BaseModel):
     id: int = Field(None, example=10)
@@ -1882,11 +1983,11 @@ class UserV3(BaseModel):
     default_target_hours: Optional[bool] = Field(None, description="Uses the company's default target hours")
     future_coworker: Optional[bool] = Field(None, description="The future co-worker cannot log in yet and the license is free until the start date.", example=True)
     start_date: Optional[Union[str, None]] = Field(None, example='2024-07-15')
-    wage_type: Optional[Any] = None
-    edit_lock: Optional[Any] = Field(None, description="Defined editing lock for the co-worker", example='2024-06-15')
-    edit_lock_dyn: Optional[Any] = Field(None, description="Relative editing lock in days for the co-worker")
+    wage_type: Optional[Wage_type] = None
+    edit_lock: Optional[Edit_lock] = Field(None, description="Defined editing lock for the co-worker", example='2024-06-15')
+    edit_lock_dyn: Optional[Edit_lock_dyn] = Field(None, description="Relative editing lock in days for the co-worker")
     edit_lock_sync: Optional[Union[bool, None]] = None
-    work_time_edit_lock_days: Optional[Any] = Field(None, description="Relative work time editing lock in days for the co-worker")
+    work_time_edit_lock_days: Optional[Work_time_edit_lock_days] = Field(None, description="Relative work time editing lock in days for the co-worker")
     budget_notifications: Optional[bool] = None
     creator: Optional[Union[int, None]] = None
 
@@ -1912,6 +2013,14 @@ class UserReportBreakItemV1(BaseModel):
     since: str
     until: str
     length: float
+
+class UserReportSurchargeSummaryV1(BaseModel):
+    saturday: float
+    sunday: float
+    nonbusiness: float
+    nonbusiness_special: float
+    night: float
+    night_increased: float
 
 class UserReportDayDetailV1(BaseModel):
     date: str
@@ -1939,14 +2048,6 @@ class UserReportMonthDetailV1(BaseModel):
     diff: float
     surcharges: UserReportSurchargeSummaryV1
     week_details: Optional[Union[Any, None]]
-
-class UserReportSurchargeSummaryV1(BaseModel):
-    saturday: float
-    sunday: float
-    nonbusiness: float
-    nonbusiness_special: float
-    night: float
-    night_increased: float
 
 class UserReportV1(BaseModel):
     users_id: int
@@ -1976,22 +2077,18 @@ class UserReportWeekDetailV1(BaseModel):
     surcharges: UserReportSurchargeSummaryV1
     day_details: Optional[Union[Any, None]]
 
-class UsersAccessServiceRestrictedAccessV2(BaseModel):
-    id: Any
-    hasAccess: bool
-
 class UsersAccessServiceV2(BaseModel):
-    add: Any
+    add: Add
+
+class UsersExceedAccessGroupLimit(BaseModel):
+    limit: int = Field(None, description="The limit of access groups per user", example=30)
+    users_ids: List[int] = Field(None, description="One or more ids of users exceeding the access group limit", example=[99999])
 
 class UsersExceedAccessGroupLimitError(BaseModel):
     type: Optional[str] = Field(None, example='UsersExceedAccessGroupLimit')
     message: Optional[Union[str, None]] = Field(None, example='Users are exceeding the access group limit.')
     path: Optional[Union[str, None]] = None
     details: Optional[UsersExceedAccessGroupLimit] = None
-
-class UsersExceedAccessGroupLimit(BaseModel):
-    limit: int = Field(None, description="The limit of access groups per user", example=30)
-    users_ids: List[int] = Field(None, description="One or more ids of users exceeding the access group limit", example=[99999])
 
 class UsersNonbusinessDayV2(BaseModel):
     users_id: int = Field(None, example=10)
@@ -2009,61 +2106,6 @@ class UsersNonbusinessGroupV3(BaseModel):
     date_until: Optional[Union[str, None]] = Field(None, example='2025-01-31')
     nonbusiness_groups_id: Optional[Union[int, None]] = Field(None, example=10)
     users_id: int = Field(None, example=10)
-
-class UserV1(BaseModel):
-    id: int
-    name: Optional[Union[str, None]]
-    number: Optional[Union[str, None]] = None
-    email: Optional[str] = None
-    role: Optional[RoleEnum] = None
-    active: bool
-    timeformat_12h: bool
-    weekstart_monday: Optional[Union[bool, None]]
-    weekend_friday: Optional[Union[bool, None]]
-    language: LanguageEnum
-    timezone: str
-    wage_type: Optional[Any] = None
-    can_generally_see_absences: Optional[bool] = None
-    can_generally_manage_absences: Optional[bool] = None
-    can_add_customers: Optional[bool] = None
-    worktime_regulation_id: Optional[Union[int, None]] = None
-    teams_id: Optional[Union[int, None]]
-    initials: Optional[Union[str, None]]
-    nonbusinessgroups_id: Optional[Union[int, None]]
-    boss: Optional[Union[int, None]] = None
-    absence_managers_id: Optional[List[int]] = None
-    default_holidays_count: Optional[bool] = None
-    default_target_hours: Optional[bool] = None
-    edit_lock: Optional[Union[str, None]] = None
-    edit_lock_dyn: Optional[Any] = None
-    edit_lock_sync: Optional[Union[bool, None]] = None
-    work_time_edit_lock_days: Optional[Any] = None
-    creator: Optional[Union[int, None]] = None
-    support_pin: Optional[str] = None
-
-class EntryV2LumpsumValue(BaseModel):
-    id: int = Field(None, example=10)
-    customers_id: int = Field(None, example=10)
-    projects_id: Optional[Union[int, None]]
-    subprojects_id: Optional[Union[int, None]]
-    users_id: int
-    billable: int
-    texts_id: Optional[Union[int, None]]
-    text: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true")
-    time_since: str = Field(None, example='2023-02-28T00:00:00Z')
-    time_until: Optional[Union[str, None]] = Field(None, example='2023-02-28T00:00:00Z')
-    time_insert: str = Field(None, example='2023-02-28Z00:00:00Z')
-    time_last_change: str = Field(None, example='2023-02-28T00:00:00Z')
-    test_data: bool
-    customers_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Hotel Bergblick')
-    projects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Publicity campaign')
-    subprojects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Social media ads')
-    users_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='Max Mustermann')
-    revenue: Optional[float] = Field(None, description="Only with necessary access rights and if enhanced_list=true", example=999.9)
-    type: TypeEnum = Field(None, description="Entry type: 1 = time, 2 = lump sum value, 3 = lump sum service.")
-    services_id: Optional[Union[int, None]]
-    lumpsum: float = Field(None, example=99.99)
-    services_name: Optional[str] = Field(None, description="Only if enhanced_list=true", example='SEO service')
 
 class WebhookEvent_absence_approved_PayloadModel_AbsenceModel(BaseModel):
     id: int = Field(None, description="The ID of the absence", example=1)
@@ -2726,21 +2768,25 @@ class WorkTimeIntervalV2(BaseModel):
     time_since: str
     time_until: Optional[Union[str, None]]
 
-class WorkTimeRegulationV3(BaseModel):
-    id: int = Field(None, example=10)
-    name: Optional[str] = Field(None, description="Only visible for owners or workers with elevated access `manage_users_work_time_settings`", example='Germany')
-    add_to_worktime: bool = Field(None, example=False)
-    daily_max: float = Field(None, example=10)
-    weekly_max: float = Field(None, example=60)
-    interval_max: float = Field(None, example=6)
-
 class WorkTimesChangeRequestChangeV2(BaseModel):
     type: ChangeRequestIntervalTypeEnum
     time_since: str
     time_until: Optional[Union[str, None]]
 
+class WorkTimesChangeRequestV2(BaseModel):
+    id: int
+    date: str
+    users_id: int
+    status: ChangeRequestStatusEnum
+    created_at: str
+    declined_at: Optional[Union[str, None]]
+    declined_by: Optional[Union[int, None]]
+    changes: List[WorkTimesChangeRequestChangeV2]
+
+Change_request = Union[WorkTimesChangeRequestV2, Any]
+
 class WorkTimesChangeRequestPostV2(BaseModel):
-    change_request: Any
+    change_request: Change_request
     approved_immediately: bool
 
 class WorkTimesChangeRequestsDeclineChangeV2(BaseModel):
@@ -2758,27 +2804,11 @@ class WorkTimesChangeRequestsDeclineV2(BaseModel):
     declined_by: Optional[Union[int, None]]
     changes: List[WorkTimesChangeRequestsDeclineChangeV2]
 
-class WorkTimesChangeRequestV2(BaseModel):
-    id: int
-    date: str
-    users_id: int
-    status: ChangeRequestStatusEnum
-    created_at: str
-    declined_at: Optional[Union[str, None]]
-    declined_by: Optional[Union[int, None]]
-    changes: List[WorkTimesChangeRequestChangeV2]
-
 class WorkTimeV2(BaseModel):
     date: str
     users_id: int
     offset: int = Field(None, description="Only possible for days before 2023-01-01; can be positive or negative.")
     intervals: List[WorkTimeIntervalV2]
-
-class MissingManageUsersAccessForAssigningAccessGroup(BaseModel):
-    access_groups_ids: List[int] = Field(None, description="The access groups with elevated access")
-
-class MissingManageUsersAccessForRemovingAccessGroup(BaseModel):
-    access_groups_ids: List[int] = Field(None, description="The access groups with elevated access")
 
 class register_post_RequestBodyModel(BaseModel):
     companies_name: str
@@ -2969,7 +2999,7 @@ class v2_clock_get_InputModel(BaseModel):
 class v2_clock_post_RequestBodyModel(BaseModel):
     customers_id: int
     services_id: int
-    billable: Optional[int] = None
+    billable: Optional[Billable] = None
     duration_transfer: Optional[Union[int, None]] = None
     projects_id: Optional[Union[int, None]] = None
     subprojects_id: Optional[Union[int, None]] = None
@@ -3081,7 +3111,7 @@ class v2_entrygroups_put_RequestBodyModel(BaseModel):
     subprojects_id: Optional[Union[int, None]] = None
     services_id: Optional[Union[int, None]] = None
     lumpsum_services_id: Optional[Union[int, None]] = None
-    billable: Optional[int] = None
+    billable: Optional[Billable] = None
     text: Optional[Union[str, None]] = None
     hourly_rate: Optional[Union[float, None]] = None
     confirm_key: Optional[str] = Field(None, description="For safety, the api will respond with a confirmation key with which you have to request once again in order to confirm your edit action")
@@ -3341,13 +3371,15 @@ class v3_customers_get_InputModel(BaseModel):
     items_per_page: int
 
 
+Color = Union[CustomerColorEnum, Any]
+
 class v3_customers_post_RequestBodyModel(BaseModel):
     name: str
     number: Optional[Union[str, None]] = Field(None, description="Freely selectable number for the customer")
     active: Optional[bool] = None
     billable_default: Optional[bool] = None
     note: Optional[Union[str, None]] = Field(None, description="Can only be set by owners or workers with elevated access `manage_customers_and_projects`")
-    color: Optional[int] = Field(None, description="Possible values:\n- `1`: BloodOrange\n- `2`: Sunflower\n- `3`: LightGreen\n- `4`: Caribbean\n- `5`: Sky\n- `6`: BrandBlue\n- `7`: BluePurple\n- `8`: Magenta\n- `9`: ChewingGum")
+    color: Optional[Color] = Field(None, description="Possible values:\n- `1`: BloodOrange\n- `2`: Sunflower\n- `3`: LightGreen\n- `4`: Caribbean\n- `5`: Sky\n- `6`: BrandBlue\n- `7`: BluePurple\n- `8`: Magenta\n- `9`: ChewingGum")
     bill_service_id: Optional[Union[str, None]] = Field(None, description="Can only be set by owners or workers with elevated access `manage_customers_and_projects` and if a billing application with customers support is linked up")
 
 class v3_customers_post_InputModel(BaseModel):
@@ -3648,9 +3680,9 @@ class v3_users_post_RequestBodyModel(BaseModel):
     start_date: Optional[Union[str, None]] = Field(None, example='2023-02-28')
     budget_notifications: Optional[bool] = None
     edit_lock: Optional[Union[str, None]] = Field(None, description="The date after the co-worker is not allowed to edit his entries anymore. Can only be set by owners or workers with elevated access `manage_users_access`.", example='2023-02-28')
-    edit_lock_dyn: Optional[int] = Field(None, description="Dynamic edit lock for this co-worker. Can only be set by owners or workers with elevated access `manage_users_access`.")
+    edit_lock_dyn: Optional[Edit_lock_dyn] = Field(None, description="Dynamic edit lock for this co-worker. Can only be set by owners or workers with elevated access `manage_users_access`.")
     edit_lock_sync: Optional[bool] = Field(None, description="Can future changes to the company-wide edit lock overwrite the edit lock for this co-worker? Can only be set by owners or workers with elevated access `manage_users_access`.")
-    work_time_edit_lock_days: Optional[int] = Field(None, description="Relative work time editing lock in days for the co-worker. Can only be set by owners or workers with elevated access `manage_users_access`.")
+    work_time_edit_lock_days: Optional[Work_time_edit_lock_days] = Field(None, description="Relative work time editing lock in days for the co-worker. Can only be set by owners or workers with elevated access `manage_users_access`.")
     default_holidays_count: Optional[bool] = Field(None, description="Uses the company's default holiday count")
     default_target_hours: Optional[bool] = Field(None, description="Uses the company's default target hours")
     work_time_regulations_id: Optional[Union[int, None]] = None
@@ -3684,9 +3716,9 @@ class v3_users__id__put_RequestBodyModel(BaseModel):
     weekend_friday: Optional[bool] = Field(None, description="End week on Friday?")
     show_favorites: Optional[bool] = None
     edit_lock: Optional[Union[str, None]] = Field(None, description="The date after the co-worker is not allowed to edit his entries anymore. Can only be managed by owners or workers with elevated access `manage_users_access`.", example='2023-02-28')
-    edit_lock_dyn: Optional[int] = Field(None, description="Dynamic edit lock for this co-worker. Can only be managed by owners or workers with elevated access `manage_users_access`.")
+    edit_lock_dyn: Optional[Edit_lock_dyn] = Field(None, description="Dynamic edit lock for this co-worker. Can only be managed by owners or workers with elevated access `manage_users_access`.")
     edit_lock_sync: Optional[bool] = Field(None, description="Can future changes to the company-wide edit lock overwrite the edit lock for this co-worker? Can only be managed by owners or workers with elevated access `manage_users_access`.")
-    work_time_edit_lock_days: Optional[int] = Field(None, description="Relative work time editing lock in days for the co-worker. Can only be managed by owners or workers with elevated access `manage_users_access`.")
+    work_time_edit_lock_days: Optional[Work_time_edit_lock_days] = Field(None, description="Relative work time editing lock in days for the co-worker. Can only be managed by owners or workers with elevated access `manage_users_access`.")
     mail_to_user: Optional[bool] = None
     start_date: Optional[str] = Field(None, example='2023-02-28')
     budget_notifications: Optional[bool] = None

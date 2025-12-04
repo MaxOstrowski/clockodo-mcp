@@ -1,12 +1,8 @@
 """Clockodo MCP Server implementation."""
 
 from mcp.server.fastmcp import FastMCP
-from enum import Enum
-import requests
 from dotenv import load_dotenv
 import os
-
-
 
 load_dotenv()
 AUTH_HEADERS = {
@@ -17,6 +13,4 @@ AUTH_HEADERS = {
 mcp = FastMCP("Clockodo MCP Server", json_response=True)
 BASE_URL = "https://my.clockodo.com/api"
 
-
-def main():
-    mcp.run(transport="stdio")
+    
