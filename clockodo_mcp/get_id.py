@@ -11,6 +11,29 @@ from clockodo_mcp.models import (
     AbsenceStatus, AbsenceType, Billable, BudgetSource, UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
 )
 
+def flatten_dict(d, parent_key=''):
+    """
+    Recursively flattens a dictionary for query parameters using bracket notation, e.g. filter[active]=True.
+    """
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}[{k}]" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key).items())
+        elif isinstance(v, list):
+            for item in v:
+                if isinstance(item, dict):
+                    items.extend(flatten_dict(item, new_key).items())
+                elif isinstance(item, bool):
+                    items.append((new_key, str(item).lower()))
+                else:
+                    items.append((new_key, item))
+        elif isinstance(v, bool):
+            items.append((new_key, str(v).lower()))
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
 class ServiceEnum(Enum):
     targethours = "targethours"
     userreports = "userreports"
@@ -263,7 +286,8 @@ def get_customers(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict, parent_key='filter'))
     if sort is not None:
         params['sort'] = [s.value for s in sort]
     if scope is not None:
@@ -333,7 +357,8 @@ def get_entries_texts(
     if items is not None:
         params['items'] = items
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict, parent_key='filter'))
     resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.ENTRIES_TEXTS.value, headers=AUTH_HEADERS, params=params)
     return resp.json()
 
@@ -419,7 +444,8 @@ def get_projects_reports(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict, parent_key='filter'))
     if sort is not None:
         params['sort'] = [s.value for s in sort]
     if page is not None:
@@ -456,7 +482,8 @@ def get_subprojects(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict, parent_key='filter'))
     if sort is not None:
         params['sort'] = sort.value
     if page is not None:
@@ -490,7 +517,8 @@ def get_teams(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict, parent_key='filter'))
     if scope is not None:
         params['scope'] = scope.value
     if sort is not None:
@@ -543,7 +571,8 @@ def get_users_all(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict, parent_key='filter'))
     if scope is not None:
         params['scope'] = scope.value
     if sort is not None:
@@ -560,8 +589,9 @@ def get_users_all(
         params=params
     )
     prepped = req.prepare()
-    with open("debug.txt", "w") as f:
-        f.write(prepped.url + "\n")
+    # TODO: remove
+    #with open("debug.txt", "w") as f:
+    #    f.write(prepped.url + "\n")
     resp = requests.Session().send(prepped)
     return resp.json()
 
@@ -588,7 +618,8 @@ def get_users_nonbusinessgroups(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict, parent_key='filter'))
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
@@ -619,7 +650,8 @@ def get_absences(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict))
     if scope is not None:
         params['scope'] = scope.value
     resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.ABSENCES.value, headers=AUTH_HEADERS, params=params)
@@ -648,7 +680,8 @@ def get_lumpsumservices(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict, parent_key='filter'))
     if sort is not None:
         params['sort'] = sort
     if page is not None:
@@ -686,7 +719,8 @@ def get_projects(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict, parent_key='filter'))
     if sort is not None:
         params['sort'] = sort
     if scope is not None:
@@ -731,7 +765,8 @@ def get_projects_reports_v4(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict, parent_key='filter'))
     if sort is not None:
         params['sort'] = [s.value for s in sort]
     if page is not None:
@@ -766,7 +801,8 @@ def get_services(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        filter_dict = filter.model_dump(exclude_none=True)
+        params.update(flatten_dict(filter_dict, parent_key='filter'))
     if sort is not None:
         params['sort'] = sort
     if scope is not None:
