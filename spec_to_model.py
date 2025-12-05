@@ -60,8 +60,8 @@ class SchemaExtractor:
 			ref = schema["$ref"].split("/")[-1]
 			ref_schema = self.spec.get("components", {}).get("schemas", {}).get(ref)
 			if ref_schema and "enum" in ref_schema:
-				# Always reference the enum class name
-				return ref + "Enum"
+				# Always reference the enum class name (use schema name directly)
+				return ref
 			return ref
 		if "oneOf" in schema:
 			# Handle oneOf schemas as Union types
@@ -101,7 +101,7 @@ class SchemaExtractor:
 			for prop, prop_schema in props.items():
 				# Enum handling
 				if "enum" in prop_schema:
-					enum_name = prop.capitalize() + "Enum"
+					enum_name = prop.capitalize()
 					enum_type = "IntEnum" if prop_schema.get("type") == "integer" else "Enum"
 					enum_values = prop_schema["enum"]
 					enum_names = prop_schema.get("x-enumNames", [])
@@ -116,8 +116,7 @@ class SchemaExtractor:
 							else:
 								name = sanitize_name(str(v))
 						# Ensure valid Python identifier
-						if not name or not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', name):
-							name = f"VALUE_{i}"
+						name = sanitize_name(name)
 						fallback_names.append(name)
 					enum_items = "\n".join([f"    {name} = {repr(value)}" for name, value in zip(fallback_names, enum_values)])
 					enum_code = f"class {enum_name}({enum_type}):\n{enum_items}\n"
@@ -171,7 +170,7 @@ class SchemaExtractor:
 		else:
 			t = schema.get("type")
 			if "enum" in schema:
-				enum_name = name + "Enum"
+				enum_name = name
 				enum_type = "IntEnum" if t == "integer" else "Enum"
 				enum_values = schema["enum"]
 				enum_names = schema.get("x-enumNames", [])
