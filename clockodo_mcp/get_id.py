@@ -543,7 +543,7 @@ def get_users_all(
     """
     params = {}
     if filter is not None:
-        params['filter'] = filter.model_dump(exclude_none=True)
+        params['filter'] = filter
     if scope is not None:
         params['scope'] = scope.value
     if sort is not None:
