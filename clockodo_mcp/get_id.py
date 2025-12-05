@@ -265,9 +265,9 @@ def get_customers(
     if filter is not None:
         params['filter'] = filter.model_dump(exclude_none=True)
     if sort is not None:
-        params['sort'] = sort
+        params['sort'] = [s.value for s in sort]
     if scope is not None:
-        params['scope'] = scope
+        params['scope'] = scope.value
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
@@ -292,7 +292,7 @@ def get_customers_count_projects(
     if customers_id is not None:
         params['customers_id'] = customers_id
     if scope is not None:
-        params['scope'] = scope
+        params['scope'] = scope.value
     resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.CUSTOMERS_COUNT_PROJECTS.value, headers=AUTH_HEADERS, params=params)
     return resp.json()
 
@@ -329,7 +329,7 @@ def get_entries_texts(
     if term is not None:
         params['term'] = term
     if mode is not None:
-        params['mode'] = mode
+        params['mode'] = mode.value
     if items is not None:
         params['items'] = items
     if filter is not None:
@@ -458,7 +458,7 @@ def get_subprojects(
     if filter is not None:
         params['filter'] = filter.model_dump(exclude_none=True)
     if sort is not None:
-        params['sort'] = sort
+        params['sort'] = sort.value
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
@@ -492,7 +492,7 @@ def get_teams(
     if filter is not None:
         params['filter'] = filter.model_dump(exclude_none=True)
     if scope is not None:
-        params['scope'] = scope
+        params['scope'] = scope.value
     if sort is not None:
         params['sort'] = sort
     if page is not None:
@@ -611,7 +611,7 @@ def get_absences(
     if filter is not None:
         params['filter'] = filter.model_dump(exclude_none=True)
     if scope is not None:
-        params['scope'] = scope
+        params['scope'] = scope.value
     resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.ABSENCES.value, headers=AUTH_HEADERS, params=params)
     return resp.json()
 
@@ -680,7 +680,7 @@ def get_projects(
     if sort is not None:
         params['sort'] = sort
     if scope is not None:
-        params['scope'] = scope
+        params['scope'] = scope.value
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
@@ -760,7 +760,7 @@ def get_services(
     if sort is not None:
         params['sort'] = sort
     if scope is not None:
-        params['scope'] = scope
+        params['scope'] = scope.value
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
