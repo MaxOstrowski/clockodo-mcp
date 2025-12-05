@@ -552,7 +552,17 @@ def get_users_all(
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.USERS_ALL.value, headers=AUTH_HEADERS, params=params)
+    # Build the request object to get the final URL
+    req = requests.Request(
+        "GET",
+        url=BASE_URL + ServiceEnumListAuto.USERS_ALL.value,
+        headers=AUTH_HEADERS,
+        params=params
+    )
+    prepped = req.prepare()
+    with open("debug.txt", "w") as f:
+        f.write(prepped.url + "\n")
+    resp = requests.Session().send(prepped)
     return resp.json()
 
 
