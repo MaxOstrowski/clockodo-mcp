@@ -533,11 +533,11 @@ def get_users_all(
     """
     Get users with optional filtering, sorting, and paging.
     Args:
-        filter (dict, optional): Filter object.
-        scope (str, optional): UserScope.
-        sort (list, optional): List of ApiUsersV3_SortForIndex.
-        page (int, optional): Page number, min 1.
-        items_per_page (int, optional): Items per page, min 1, max 1000.
+        filter: Filter object.
+        scope: UserScope.
+        sort: List of ApiUsersV3_SortForIndex.
+        page: Page number, min 1.
+        items_per_page: Items per page, min 1, max 1000.
     Returns:
         dict: Users data.
     """
@@ -545,7 +545,7 @@ def get_users_all(
     if filter is not None:
         params['filter'] = filter.model_dump(exclude_none=True)
     if scope is not None:
-        params['scope'] = scope
+        params['scope'] = scope.value
     if sort is not None:
         params['sort'] = [s.value for s in sort]
     if page is not None:
