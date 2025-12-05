@@ -91,7 +91,8 @@ class SchemaExtractor:
 			item_type = self.extract_schema(schema["items"], name + "Item")
 			self.models[name] = f"{name} = List[{item_type}]"
 			return name
-		if schema.get("type") == "object":
+		# Treat any schema with 'properties' as an object, even if 'type' is missing
+		if schema.get("type") == "object" or ("properties" in schema):
 			model_name = name
 			if model_name in self.models:
 				return model_name

@@ -8,6 +8,13 @@ class Type(Enum):
     _3 = 3
 
 
+class Interval(Enum):
+    _0 = 0
+    _1 = 1
+    _2 = 2
+    _3 = 3
+
+
 class Language(Enum):
     en = 'en'
     fr = 'fr'
@@ -463,9 +470,9 @@ Date_until = str
 
 Count_days = float
 
-AbsenceStatus = int
-
 DayAbsenceType = int
+
+AbsenceStatus = int
 
 class AbsenceDayAbsenceV4(BaseModel):
     id: Id
@@ -541,13 +548,13 @@ ApiAccessGroupsProjectsV2_AccessValueForPut = int
 
 ApiAccessGroupsServicesV2_AccessValueForPut = int
 
-Interval_max = float
-
 Weekly_max = float
 
-Daily_max = float
+Interval_max = float
 
 Add_to_worktime = bool
+
+Daily_max = float
 
 class WorkTimeRegulationV3(BaseModel):
     id: Id = Field(None, example=10)
@@ -559,136 +566,45 @@ class WorkTimeRegulationV3(BaseModel):
 
 Worktime_regulation = Union[WorkTimeRegulationV3, Any]
 
-Onboarding_complete = bool
+Support_pin = str
 
-Compensate_month_default = float
-
-Module_work_time = bool
-
-Timezone_default = str
-
-Saturday = float
-
-Thursday = float
-
-Sunday = float
-
-Monday = float
-
-Wednesday = float
-
-Tuesday = float
-
-Friday = float
-
-class CompanyTargetHoursDefaultNodeV1(BaseModel):
-    monday: Monday
-    tuesday: Tuesday
-    wednesday: Wednesday
-    thursday: Thursday
-    friday: Friday
-    saturday: Saturday
-    sunday: Sunday
-
-Compensate_day_default = float
-
-Module_project_times = bool
-
-Module_absence = bool
-
-Module_userreports = bool
-
-Absence_reduces_target_hours = bool
-
-Force_linked_entry_times = bool
-
-Worktime_force_breaks = int
-
-Module_target_hours = bool
-
-Allow_entry_overlaps = bool
-
-Module_user_reports = bool
-
-Allow_entries_text_multiline = bool
-
-Module_targethours = bool
-
-Holidays_count_default = float
-
-Allow_entries_for_customers = bool
-
-Module_entries_texts = bool
-
-class CompanyV1(BaseModel):
-    id: Id
-    name: Name
-    timezone_default: Timezone_default
-    currency: Optional[Union[str, None]]
-    allow_entries_text_multiline: Allow_entries_text_multiline
-    allow_entries_for_customers: Allow_entries_for_customers
-    allow_entry_overlaps: Allow_entry_overlaps
-    force_linked_entry_times: Force_linked_entry_times
-    default_customers_id: Optional[Union[int, None]]
-    default_services_id: Optional[Union[int, None]]
-    module_absence: Module_absence
-    module_work_time: Module_work_time
-    module_targethours: Module_targethours
-    module_target_hours: Module_target_hours
-    module_userreports: Module_userreports
-    module_user_reports: Module_user_reports
-    module_project_times: Module_project_times
-    module_entries_texts: Module_entries_texts
-    nonbusiness_group_default: Optional[Union[int, None]]
-    onboarding_complete: Onboarding_complete
-    worktime_regulation_default: Optional[Union[int, None]]
-    worktime_evaluate_regulations_since: Optional[Union[str, None]]
-    worktime_force_breaks: Worktime_force_breaks
-    holidays_count_default: Holidays_count_default
-    absence_reduces_target_hours: Absence_reduces_target_hours
-    compensate_day_default: Compensate_day_default
-    compensate_month_default: Compensate_month_default
-    target_hours_default: CompanyTargetHoursDefaultNodeV1
+Email = str
 
 Timezone = str
 
-WorkTimeEditLockDay = int
-
-Work_time_edit_lock_days = Union[WorkTimeEditLockDay, Any]
-
-WageType = int
-
-Wage_type = Union[WageType, Any]
+Can_generally_see_absences = bool
 
 Active = bool
 
 Role = str
 
-EditLockDay = int
-
-Edit_lock_dyn = Union[EditLockDay, Any]
-
-Language = str
-
-Email = str
-
-Can_add_customers = bool
-
 Timeformat_12h = bool
-
-Can_generally_manage_absences = bool
-
-Support_pin = str
 
 Absence_managers_idItem = int
 
 Absence_managers_id = List[Absence_managers_idItem]
 
-Default_target_hours = bool
-
-Can_generally_see_absences = bool
+Can_generally_manage_absences = bool
 
 Default_holidays_count = bool
+
+Default_target_hours = bool
+
+WorkTimeEditLockDay = int
+
+Work_time_edit_lock_days = Union[WorkTimeEditLockDay, Any]
+
+Language = str
+
+Can_add_customers = bool
+
+EditLockDay = int
+
+Edit_lock_dyn = Union[EditLockDay, Any]
+
+WageType = int
+
+Wage_type = Union[WageType, Any]
 
 class UserV1(BaseModel):
     id: Id
@@ -720,6 +636,97 @@ class UserV1(BaseModel):
     work_time_edit_lock_days: Optional[Work_time_edit_lock_days] = None
     creator: Optional[Union[int, None]] = None
     support_pin: Optional[Support_pin] = None
+
+Allow_entry_overlaps = bool
+
+Compensate_month_default = float
+
+Holidays_count_default = float
+
+Module_work_time = bool
+
+Compensate_day_default = float
+
+Onboarding_complete = bool
+
+Force_linked_entry_times = bool
+
+Module_absence = bool
+
+Module_target_hours = bool
+
+Allow_entries_text_multiline = bool
+
+Wednesday = float
+
+Friday = float
+
+Sunday = float
+
+Saturday = float
+
+Monday = float
+
+Tuesday = float
+
+Thursday = float
+
+class CompanyTargetHoursDefaultNodeV1(BaseModel):
+    monday: Monday
+    tuesday: Tuesday
+    wednesday: Wednesday
+    thursday: Thursday
+    friday: Friday
+    saturday: Saturday
+    sunday: Sunday
+
+Worktime_force_breaks = int
+
+Allow_entries_for_customers = bool
+
+Module_user_reports = bool
+
+Timezone_default = str
+
+Module_userreports = bool
+
+Module_project_times = bool
+
+Module_targethours = bool
+
+Module_entries_texts = bool
+
+Absence_reduces_target_hours = bool
+
+class CompanyV1(BaseModel):
+    id: Id
+    name: Name
+    timezone_default: Timezone_default
+    currency: Optional[Union[str, None]]
+    allow_entries_text_multiline: Allow_entries_text_multiline
+    allow_entries_for_customers: Allow_entries_for_customers
+    allow_entry_overlaps: Allow_entry_overlaps
+    force_linked_entry_times: Force_linked_entry_times
+    default_customers_id: Optional[Union[int, None]]
+    default_services_id: Optional[Union[int, None]]
+    module_absence: Module_absence
+    module_work_time: Module_work_time
+    module_targethours: Module_targethours
+    module_target_hours: Module_target_hours
+    module_userreports: Module_userreports
+    module_user_reports: Module_user_reports
+    module_project_times: Module_project_times
+    module_entries_texts: Module_entries_texts
+    nonbusiness_group_default: Optional[Union[int, None]]
+    onboarding_complete: Onboarding_complete
+    worktime_regulation_default: Optional[Union[int, None]]
+    worktime_evaluate_regulations_since: Optional[Union[str, None]]
+    worktime_force_breaks: Worktime_force_breaks
+    holidays_count_default: Holidays_count_default
+    absence_reduces_target_hours: Absence_reduces_target_hours
+    compensate_day_default: Compensate_day_default
+    compensate_month_default: Compensate_month_default
+    target_hours_default: CompanyTargetHoursDefaultNodeV1
 
 class AggregatesUsersMeV2(BaseModel):
     user: UserV1
@@ -875,11 +882,11 @@ class BilledMoneyCanOnlyBeSetWithHardBudgetError(BaseModel):
     path: Optional[Union[str, None]] = None
     details: Optional[Any] = None
 
-Access_name = str
-
 Elevated_access_dependenciesItem = str
 
 Elevated_access_dependencies = List[Elevated_access_dependenciesItem]
+
+Access_name = str
 
 class BlockingAccessDependencies(BaseModel):
     access_name: Access_name = Field(None, description="The access you were trying to remove", example='see_absences')
@@ -899,11 +906,11 @@ class BossCannotBeArchivedError(BaseModel):
 
 Hard = bool
 
+From_subprojects = bool
+
 Thresholds = int
 
 Notification_thresholds = List[Thresholds]
-
-From_subprojects = bool
 
 Monetary = bool
 
@@ -926,9 +933,9 @@ BudgetOption = str
 
 BudgetSource = int
 
-Max = float
-
 Min = float
+
+Max = float
 
 Inclusive = bool
 
@@ -1007,31 +1014,31 @@ ChangeRequestIntervalType = int
 
 ChangeRequestStatus = int
 
-Clocked = bool
+Time_insert = str
 
 Users_name = str
 
-Clocked_offline = bool
-
-Services_name = str
-
-Test_data = bool
-
-Time_insert = str
+Clocked = bool
 
 Time_last_change = str
 
-Customers_name = str
+Time_since = str
 
-Hourly_rate = float
+Services_name = str
+
+Customers_id = int
 
 Time_last_change_work_time = str
 
-Time_since = str
+Hourly_rate = float
+
+Test_data = bool
+
+Customers_name = str
 
 Revenue = float
 
-Customers_id = int
+Clocked_offline = bool
 
 class EntryV2Time(BaseModel):
     id: Id = Field(None, example=10)
@@ -1062,35 +1069,6 @@ class EntryV2Time(BaseModel):
     hourly_rate: Optional[Hourly_rate] = Field(None, description="Only with necessary access rights and if enhanced_list=true", example=99.99)
     services_name: Optional[Services_name] = Field(None, description="Only if enhanced_list=true", example='SEO service')
 
-Lumpsum_services_amount = float
-
-Lumpsum_services_price = float
-
-class EntryV2LumpsumService(BaseModel):
-    id: Id = Field(None, example=10)
-    customers_id: Customers_id = Field(None, example=10)
-    projects_id: Optional[Union[int, None]]
-    subprojects_id: Optional[Union[int, None]]
-    users_id: Users_id
-    billable: Billable
-    texts_id: Optional[Union[int, None]]
-    text: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true")
-    time_since: Time_since = Field(None, example='2023-02-28T00:00:00Z')
-    time_until: Optional[Union[str, None]] = Field(None, example='2023-02-28T00:00:00Z')
-    time_insert: Time_insert = Field(None, example='2023-02-28Z00:00:00Z')
-    time_last_change: Time_last_change = Field(None, example='2023-02-28T00:00:00Z')
-    test_data: Test_data
-    customers_name: Optional[Customers_name] = Field(None, description="Only if enhanced_list=true", example='Hotel Bergblick')
-    projects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Publicity campaign')
-    subprojects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Social media ads')
-    users_name: Optional[Users_name] = Field(None, description="Only if enhanced_list=true", example='Max Mustermann')
-    revenue: Optional[Revenue] = Field(None, description="Only with necessary access rights and if enhanced_list=true", example=999.9)
-    type: Type = Field(None, description="Entry type: 1 = time, 2 = lump sum service, 3 = lump sum value.")
-    services_name: Optional[Services_name] = Field(None, description="Only if enhanced_list=true", example='SEO service')
-    lumpsum_services_id: Optional[Union[int, None]]
-    lumpsum_services_amount: Lumpsum_services_amount = Field(None, example=99.99)
-    lumpsum_services_price: Optional[Lumpsum_services_price] = Field(None, description="Only if enhanced_list=true", example=99.99)
-
 Lumpsum = float
 
 class EntryV2LumpsumValue(BaseModel):
@@ -1116,6 +1094,35 @@ class EntryV2LumpsumValue(BaseModel):
     services_id: Optional[Union[int, None]]
     lumpsum: Lumpsum = Field(None, example=99.99)
     services_name: Optional[Services_name] = Field(None, description="Only if enhanced_list=true", example='SEO service')
+
+Lumpsum_services_price = float
+
+Lumpsum_services_amount = float
+
+class EntryV2LumpsumService(BaseModel):
+    id: Id = Field(None, example=10)
+    customers_id: Customers_id = Field(None, example=10)
+    projects_id: Optional[Union[int, None]]
+    subprojects_id: Optional[Union[int, None]]
+    users_id: Users_id
+    billable: Billable
+    texts_id: Optional[Union[int, None]]
+    text: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true")
+    time_since: Time_since = Field(None, example='2023-02-28T00:00:00Z')
+    time_until: Optional[Union[str, None]] = Field(None, example='2023-02-28T00:00:00Z')
+    time_insert: Time_insert = Field(None, example='2023-02-28Z00:00:00Z')
+    time_last_change: Time_last_change = Field(None, example='2023-02-28T00:00:00Z')
+    test_data: Test_data
+    customers_name: Optional[Customers_name] = Field(None, description="Only if enhanced_list=true", example='Hotel Bergblick')
+    projects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Publicity campaign')
+    subprojects_name: Optional[Union[str, None]] = Field(None, description="Only if enhanced_list=true", example='Social media ads')
+    users_name: Optional[Users_name] = Field(None, description="Only if enhanced_list=true", example='Max Mustermann')
+    revenue: Optional[Revenue] = Field(None, description="Only with necessary access rights and if enhanced_list=true", example=999.9)
+    type: Type = Field(None, description="Entry type: 1 = time, 2 = lump sum service, 3 = lump sum value.")
+    services_name: Optional[Services_name] = Field(None, description="Only if enhanced_list=true", example='SEO service')
+    lumpsum_services_id: Optional[Union[int, None]]
+    lumpsum_services_amount: Lumpsum_services_amount = Field(None, example=99.99)
+    lumpsum_services_price: Optional[Lumpsum_services_price] = Field(None, description="Only if enhanced_list=true", example=99.99)
 
 EntryV2 = Union[EntryV2Time, EntryV2LumpsumValue, EntryV2LumpsumService]
 
@@ -1219,10 +1226,17 @@ class DuplicateEntryForUserAndYearError(BaseModel):
 
 ClockDurationV2_RunningModel = Union[EntryV2, Any]
 
+Overlapping = bool
+
+class Overlapping_correction(BaseModel):
+    overlapping: Overlapping = Field(None, example=True)
+    overlapping_free_time_since: Optional[Union[str, None]] = Field(None, example='2023-02-28T00:00:00Z')
+    truncate_previous_entry: Optional[Union[int, None]] = Field(None, example=1)
+
 class ClockDurationV2(BaseModel):
     updated: EntryV2
     running: ClockDurationV2_RunningModel
-    overlapping_correction: Optional[Union[Any, None]]
+    overlapping_correction: Optional[Overlapping_correction]
     current_time: Current_time = Field(None, example='2023-02-28T00:00:00Z')
 
 ResourcesItem = str
@@ -1266,6 +1280,9 @@ Affected_entries = int
 class EntryGroupConfirmUpdateV2(BaseModel):
     confirm_key: Confirm_key
     affected_entries: Affected_entries
+
+class EntryGroupNoRestrictionV2(BaseModel):
+    pass
 
 class EntryGroupRestrictionV2(BaseModel):
     users_id: Optional[Union[int, None]]
@@ -1637,9 +1654,9 @@ class ProjectsReportProjectReportItemV4(BaseModel):
     projects_name: Projects_name
     projects_number: Optional[Union[str, None]]
 
-Subprojects_name = str
-
 Subprojects_id = int
+
+Subprojects_name = str
 
 class ProjectsReportRetainerSubprojectReportItemV4(BaseModel):
     customers_id: Customers_id
@@ -1675,7 +1692,7 @@ class ProjectV4(BaseModel):
     count_subprojects: Count_subprojects = Field(None, description="Number of subprojects", example=5)
     deadline: Optional[Union[str, None]] = Field(None, example='2023-02-28')
     start_date: Optional[Union[str, None]] = Field(None, description="Date when the project becomes available for time tracking", example='2023-01-01')
-    budget: Optional[Union[Any, None]] = None
+    budget: Optional[Budget] = None
     bill_service_id: Optional[Union[str, None]] = Field(None, example='1234')
 
 Customer_idsItem = int
@@ -1708,10 +1725,6 @@ Children = List[RateV3]
 
 Apikey = str
 
-Allowentriestextmultiline = bool
-
-Currency_symbol = str
-
 Addcustomers = bool
 
 class SettingAccessV1(BaseModel):
@@ -1721,6 +1734,10 @@ Currency = str
 
 Weekstart_monday = bool
 
+Weekend_friday = bool
+
+Allowentriestextmultiline = bool
+
 Example = float
 
 Format = str
@@ -1729,7 +1746,7 @@ class SettingPriceFormatV1(BaseModel):
     example: Example
     format: Format
 
-Weekend_friday = bool
+Currency_symbol = str
 
 class SettingV1(BaseModel):
     name: Name
@@ -2149,9 +2166,9 @@ Diff = float
 
 Breaks = List[UserReportBreakItemV1]
 
-Night_increased = float
-
 Night = float
+
+Night_increased = float
 
 Nonbusiness_special = float
 
@@ -2960,6 +2977,8 @@ class WorkTimesChangeRequestChangeV2(BaseModel):
     time_since: Time_since
     time_until: Optional[Union[str, None]]
 
+Created_at = str
+
 Time_until = str
 
 class ChangesItem(BaseModel):
@@ -2968,8 +2987,6 @@ class ChangesItem(BaseModel):
     time_until: Optional[Time_until] = Field(None, example='2023-02-28T12:00:00Z')
 
 Changes = List[ChangesItem]
-
-Created_at = str
 
 class WorkTimesChangeRequestV2(BaseModel):
     id: Id
@@ -3289,6 +3306,20 @@ v2_entries_get_time_since_InputModel = str
 
 v2_entries_get_time_until_InputModel = str
 
+Budget_type = Union[BudgetOption, Any]
+
+class v2_entries_get_filter_InputModel(BaseModel):
+    users_id: Optional[Union[int, None]] = None
+    customers_id: Optional[Union[int, None]] = None
+    projects_id: Optional[Union[int, None]] = None
+    subprojects_id: Optional[Union[int, None]] = None
+    services_id: Optional[Union[int, None]] = None
+    lumpsum_services_id: Optional[Union[int, None]] = None
+    billable: Optional[Billable] = None
+    texts_id: Optional[Union[int, None]] = None
+    text: Optional[Union[str, None]] = None
+    budget_type: Optional[Budget_type] = None
+
 v2_entries_get_page_InputModel = int
 
 v2_entries_get_items_per_page_InputModel = int
@@ -3298,7 +3329,7 @@ class v2_entries_get_InputModel(BaseModel):
     time_until: v2_entries_get_time_until_InputModel
     calc_also_revenues_for_projects_with_hard_budget: Union[bool, None]
     enhanced_list: Union[bool, None]
-    filter: Union[Any, None]
+    filter: v2_entries_get_filter_InputModel
     page: v2_entries_get_page_InputModel
     items_per_page: v2_entries_get_items_per_page_InputModel
 
@@ -3372,6 +3403,19 @@ v2_entrygroups_get_time_until_InputModel = str
 
 v2_entrygroups_get_grouping_InputModel = List[Grouping]
 
+class v2_entrygroups_get_filter_InputModel(BaseModel):
+    users_id: Optional[Union[int, None]] = None
+    teams_id: Optional[Union[int, None]] = None
+    customers_id: Optional[Union[int, None]] = None
+    projects_id: Optional[Union[int, None]] = None
+    subprojects_id: Optional[Union[int, None]] = None
+    services_id: Optional[Union[int, None]] = None
+    lumpsum_services_id: Optional[Union[int, None]] = None
+    billable: Optional[Billable] = None
+    texts_id: Optional[Union[int, None]] = None
+    text: Optional[Union[str, None]] = None
+    budget_type: Optional[Budget_type] = None
+
 class v2_entrygroups_get_InputModel(BaseModel):
     time_since: v2_entrygroups_get_time_since_InputModel
     time_until: v2_entrygroups_get_time_until_InputModel
@@ -3379,8 +3423,21 @@ class v2_entrygroups_get_InputModel(BaseModel):
     round_to_minutes: Union[int, None]
     prepend_customer_to_project_name: Union[bool, None]
     calc_also_revenues_for_projects_with_hard_budget: Union[bool, None]
-    filter: Union[Any, None]
+    filter: v2_entrygroups_get_filter_InputModel
 
+
+class Filter(BaseModel):
+    users_id: Optional[Union[int, None]] = None
+    teams_id: Optional[Union[int, None]] = None
+    customers_id: Optional[Union[int, None]] = None
+    projects_id: Optional[Union[int, None]] = None
+    subprojects_id: Optional[Union[int, None]] = None
+    services_id: Optional[Union[int, None]] = None
+    lumpsum_services_id: Optional[Union[int, None]] = None
+    billable: Optional[Billable] = None
+    texts_id: Optional[Union[int, None]] = None
+    text: Optional[Union[str, None]] = None
+    budget_type: Optional[Budget_type] = None
 
 class v2_entrygroups_put_RequestBodyModel(BaseModel):
     time_since: Time_since = Field(None, example='2023-02-28T12:00:00Z')
@@ -3395,7 +3452,7 @@ class v2_entrygroups_put_RequestBodyModel(BaseModel):
     text: Optional[Union[str, None]] = None
     hourly_rate: Optional[Union[float, None]] = None
     confirm_key: Optional[Confirm_key] = Field(None, description="For safety, the api will respond with a confirmation key with which you have to request once again in order to confirm your edit action")
-    filter: Optional[Union[Any, None]] = None
+    filter: Optional[Filter] = None
 
 class v2_entrygroups_put_InputModel(BaseModel):
     requestBody: v2_entrygroups_put_RequestBodyModel
@@ -3407,11 +3464,24 @@ v2_entrygroups_delete_time_until_InputModel = str
 
 v2_entrygroups_delete_confirm_key_InputModel = str
 
+class v2_entrygroups_delete_filter_InputModel(BaseModel):
+    users_id: Optional[Union[int, None]] = None
+    teams_id: Optional[Union[int, None]] = None
+    customers_id: Optional[Union[int, None]] = None
+    projects_id: Optional[Union[int, None]] = None
+    subprojects_id: Optional[Union[int, None]] = None
+    services_id: Optional[Union[int, None]] = None
+    lumpsum_services_id: Optional[Union[int, None]] = None
+    billable: Optional[Billable] = None
+    texts_id: Optional[Union[int, None]] = None
+    text: Optional[Union[str, None]] = None
+    budget_type: Optional[Budget_type] = None
+
 class v2_entrygroups_delete_InputModel(BaseModel):
     time_since: v2_entrygroups_delete_time_since_InputModel
     time_until: v2_entrygroups_delete_time_until_InputModel
     confirm_key: v2_entrygroups_delete_confirm_key_InputModel
-    filter: Union[Any, None]
+    filter: v2_entrygroups_delete_filter_InputModel
 
 
 class v2_holidaysQuota_get_filter_InputModel(BaseModel):
@@ -4001,7 +4071,7 @@ class v3_subprojects_post_RequestBodyModel(BaseModel):
     projects_id: Projects_id
     name: Name
     billable_default: Optional[Billable_default] = None
-    budget: Optional[Union[Any, None]] = None
+    budget: Optional[Budget] = None
     number: Optional[Union[str, None]] = None
     note: Optional[Union[str, None]] = None
     start_date: Optional[Union[str, None]] = Field(None, example='2023-02-28')
@@ -4023,7 +4093,7 @@ v3_subprojects__id__put_id_InputModel = int
 class v3_subprojects__id__put_RequestBodyModel(BaseModel):
     name: Optional[Name] = None
     billable_default: Optional[Billable_default] = None
-    budget: Optional[Union[Any, None]] = None
+    budget: Optional[Budget] = None
     number: Optional[Union[str, None]] = None
     note: Optional[Union[str, None]] = None
     start_date: Optional[Union[str, None]] = Field(None, example='2023-02-28')
@@ -4438,7 +4508,7 @@ class v4_projects_post_RequestBodyModel(BaseModel):
     note: Optional[Union[str, None]] = None
     deadline: Optional[Union[str, None]] = Field(None, description="Date when the project will be completed automatically", example='2023-02-28')
     start_date: Optional[Union[str, None]] = Field(None, description="Date when the project becomes available for time tracking", example='2023-02-28')
-    budget: Optional[Union[Any, None]] = None
+    budget: Optional[Budget] = None
     bill_service_id: Optional[Union[str, None]] = None
 
 class v4_projects_post_InputModel(BaseModel):
@@ -4462,7 +4532,7 @@ class v4_projects__id__put_RequestBodyModel(BaseModel):
     note: Optional[Union[str, None]] = None
     deadline: Optional[Union[str, None]] = Field(None, description="Date when the project will be completed automatically", example='2023-02-28')
     start_date: Optional[Union[str, None]] = Field(None, description="Date when the project becomes available for time tracking", example='2023-02-28')
-    budget: Optional[Union[Any, None]] = None
+    budget: Optional[Budget] = None
     bill_service_id: Optional[Union[str, None]] = None
 
 class v4_projects__id__put_InputModel(BaseModel):
