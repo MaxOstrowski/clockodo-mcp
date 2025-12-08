@@ -97,6 +97,7 @@ noid_endpoint_map = {
     Service.targethours: "/targethours",
     Service.userreports: "/userreports",
     Service.worktimes: "/v2/workTimes",
+    Service.worktimeschangerequest: "/v2/workTimes/changeRequests",
     Service.accessgroups: "/v2/accessGroups",
     Service.clock: "/v2/clock",
     Service.entries: "/v2/entries",
