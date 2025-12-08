@@ -338,7 +338,7 @@ def get_teams(
     if scope is not None:
         params['scope'] = scope.value
     if sort is not None:
-        params['sort'] = sort
+        params['sort'] = [s.value for s in sort]
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
@@ -436,7 +436,7 @@ def get_lumpsumservices(
         filter_dict = filter.model_dump(exclude_none=True)
         params.update(flatten_dict(filter_dict, parent_key='filter'))
     if sort is not None:
-        params['sort'] = sort
+        params['sort'] = [s.value for s in sort]
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
@@ -461,7 +461,7 @@ def get_projects(
         filter_dict = filter.model_dump(exclude_none=True)
         params.update(flatten_dict(filter_dict, parent_key='filter'))
     if sort is not None:
-        params['sort'] = sort
+        params['sort'] = [s.value for s in sort]
     if scope is not None:
         params['scope'] = scope.value
     if page is not None:
@@ -513,7 +513,7 @@ def get_services(
         filter_dict = filter.model_dump(exclude_none=True)
         params.update(flatten_dict(filter_dict, parent_key='filter'))
     if sort is not None:
-        params['sort'] = sort
+        params['sort'] = [s.value for s in sort]
     if scope is not None:
         params['scope'] = scope.value
     if page is not None:
