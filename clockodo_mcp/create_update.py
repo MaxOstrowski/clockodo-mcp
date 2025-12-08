@@ -162,11 +162,11 @@ def create_worktimeschangerequest(
         time_until (str): End time (ISO 8601). Example: "2023-02-28T12:00:00Z"
 
 	"""
-	change_dict = changes.model_dump(exclude_none=True)
+	changes_flat = [flatten_dict(c.model_dump()) for c in changes]
 	payload = {
 		"date": date,
 		"users_id": users_id,
-		"changes": flatten_dict(change_dict, "changes"),
+		"changes": changes_flat,
 	}
 	endpoint = noid_endpoint_map.get(Service.worktimeschangerequest)
 	resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
