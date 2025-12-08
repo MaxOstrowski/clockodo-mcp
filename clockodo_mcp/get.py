@@ -3,12 +3,11 @@
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel
 import requests
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, mcp, BASE_URL
 
 from clockodo_mcp.models import UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
-from clockodo_mcp.utils import TeamsFilter, AbsencesFilter, ApiProjectsReports_SortForIndex, ApiUsersV3_SortForIndex, CustomerFilter, EntriesTextFilter, LumpSumServicesFilter, ProjectsFilter, ProjectsReportsFilter, Service, ServiceEnumListAuto, ServicesFilter, SubprojectsFilter, UsersFilter, UsersNonbusinessGroupsFilter, flatten_dict, id_endpoint_map, noid_endpoint_map
+from clockodo_mcp.utils import TeamsFilter, AbsencesFilter, ApiProjectsReports_SortForIndex, ApiUsersV3_SortForIndex, CustomerFilter, EntriesTextFilter, LumpSumServicesFilter, ProjectsFilter, ProjectsReportsFilter, Service, ServicesFilter, SubprojectsFilter, UsersFilter, UsersNonbusinessGroupsFilter, flatten_dict, id_endpoint_map, noid_endpoint_map
 
 
 
