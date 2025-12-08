@@ -1,5 +1,4 @@
-from dataclasses import Field
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
 from clockodo_mcp.models import ChangeRequestIntervalType, TargetHourType
 from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
