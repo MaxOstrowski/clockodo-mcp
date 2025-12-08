@@ -7,35 +7,33 @@ from pydantic import BaseModel
 import requests
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, mcp, BASE_URL
 
-from clockodo_mcp.models import (
-    AbsenceStatus, AbsenceType, Billable, BudgetSource, UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
-)
-from clockodo_mcp.utils import ApiProjectsReportsV4_SortForIndex, ApiUsersV3_SortForIndex, CustomerFilter, EntriesTextFilter, LumpSumServicesFilter, ProjectsFilter, ProjectsReportsV4Filter, ServiceEnum, ServiceEnumListAuto, ServicesFilter, UsersFilter, UsersNonbusinessGroupsFilter, flatten_dict, id_endpoint_map, noid_endpoint_map
+from clockodo_mcp.models import UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
+from clockodo_mcp.utils import TeamsFilter, AbsencesFilter, ApiProjectsReports_SortForIndex, ApiUsersV3_SortForIndex, CustomerFilter, EntriesTextFilter, LumpSumServicesFilter, ProjectsFilter, ProjectsReportsFilter, Service, ServiceEnumListAuto, ServicesFilter, SubprojectsFilter, UsersFilter, UsersNonbusinessGroupsFilter, flatten_dict, id_endpoint_map, noid_endpoint_map
 
 
 
 class ServicGetList(Enum):
-    targethours = ServiceEnum.targethours.value
-    userreports = ServiceEnum.userreports.value
-    accessgroups = ServiceEnum.accessgroups.value
-    clock = ServiceEnum.clock.value
-    entries = ServiceEnum.entries.value
-    entrygroups = ServiceEnum.entrygroups.value
-    holidaysquota = ServiceEnum.holidaysquota.value
-    nonbusinessdays = ServiceEnum.nonbusinessdays.value
-    nonbusinessgroups = ServiceEnum.nonbusinessgroups.value
-    customers = ServiceEnum.customers.value
-    holidayscarry = ServiceEnum.holidayscarry.value
-    overtimecarry = ServiceEnum.overtimecarry.value
-    overtimereductions = ServiceEnum.overtimereductions.value
-    subprojects = ServiceEnum.subprojects.value
-    teams = ServiceEnum.teams.value
-    users = ServiceEnum.users.value
-    usersnonbusinessgroups = ServiceEnum.usersnonbusinessgroups.value
-    absences = ServiceEnum.absences.value
-    lumpsumservices = ServiceEnum.lumpsumservices.value
-    projects = ServiceEnum.projects.value
-    services = ServiceEnum.services.value
+    targethours = Service.targethours.value
+    userreports = Service.userreports.value
+    accessgroups = Service.accessgroups.value
+    clock = Service.clock.value
+    entries = Service.entries.value
+    entrygroups = Service.entrygroups.value
+    holidaysquota = Service.holidaysquota.value
+    nonbusinessdays = Service.nonbusinessdays.value
+    nonbusinessgroups = Service.nonbusinessgroups.value
+    customers = Service.customers.value
+    holidayscarry = Service.holidayscarry.value
+    overtimecarry = Service.overtimecarry.value
+    overtimereductions = Service.overtimereductions.value
+    subprojects = Service.subprojects.value
+    teams = Service.teams.value
+    users = Service.users.value
+    usersnonbusinessgroups = Service.usersnonbusinessgroups.value
+    absences = Service.absences.value
+    lumpsumservices = Service.lumpsumservices.value
+    projects = Service.projects.value
+    services = Service.services.value
 
 
 @mcp.tool()
@@ -47,8 +45,32 @@ def get_all(service: ServicGetList) -> dict:
     resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS)
     return resp.json()
 
+
+class ServiceGetById(Enum):
+    """ Services available for get by ID endpoint """
+    targethours = Service.targethours.value
+    accessgroups = Service.accessgroups.value
+    entries = Service.entries.value
+    entrygroups = Service.entrygroups.value
+    holidaysquota = Service.holidaysquota.value
+    nonbusinessdays = Service.nonbusinessdays.value
+    nonbusinessgroups = Service.nonbusinessgroups.value
+    customers = Service.customers.value
+    holidayscarry = Service.holidayscarry.value
+    overtimecarry = Service.overtimecarry.value
+    overtimereductions = Service.overtimereductions.value
+    subprojects = Service.subprojects.value
+    teams = Service.teams.value
+    users = Service.users.value
+    usersnonbusinessgroups = Service.usersnonbusinessgroups.value
+    absences = Service.absences.value
+    lumpsumservices = Service.lumpsumservices.value
+    projects = Service.projects.value
+    services = Service.services.value
+
+
 @mcp.tool()
-def get(id: int, service: ServiceEnum) -> dict:
+def get(id: int, service: ServiceGetById) -> dict:
     """ Get entity by ID """
     endpoint_template = id_endpoint_map.get(service)
     if not endpoint_template:
@@ -57,23 +79,25 @@ def get(id: int, service: ServiceEnum) -> dict:
     resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS)
     return resp.json()
 
+# manually written get functions for services with special parameters
 
 @mcp.tool()
 def get_userreports(id: int, year: int, type: Optional[UserReportType]) -> dict:
     """
     Get userreport by ID, year, and type.
     """
-    endpoint_template = id_endpoint_map.get(ServiceEnum.userreports)
+    endpoint_template = id_endpoint_map.get(Service.userreports)
     endpoint = endpoint_template.format(id=id)
     resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params={"year": year, "type": type.value})
     return resp.json()
+
 
 @mcp.tool()
 def get_nonbusinessdays(id: int, year: Optional[int]) -> dict:
     """
     Get nonbusinessdays by ID and optional year.
     """
-    endpoint_template = id_endpoint_map.get(ServiceEnum.nonbusinessdays)
+    endpoint_template = id_endpoint_map.get(Service.nonbusinessdays)
     endpoint = endpoint_template.format(id=id)
     params = {}
     if year is not None:
@@ -88,7 +112,7 @@ def get_users(id: int, scope: Optional[UserScope]) -> dict:
     """
     Get user by ID and optional scope.
     """
-    endpoint_template = id_endpoint_map.get(ServiceEnum.users)
+    endpoint_template = id_endpoint_map.get(Service.users)
     endpoint = endpoint_template.format(id=id)
     params = {}
     if scope is not None:
@@ -98,7 +122,16 @@ def get_users(id: int, scope: Optional[UserScope]) -> dict:
 
 
 
-# --- AUTO-GENERATED TOOLS FOR PARAMETERIZED ENDPOINTS ---
+@mcp.tool()
+def get_worktimes(user_id: int, date_since: str, date_until: str) -> dict:
+    """
+    Get worktimes by user ID and date range.
+    example date: '2023-01-01'
+    """
+    endpoint = noid_endpoint_map.get(Service.worktimes)
+    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params={"user_id": user_id, "date_since": date_since, "date_until": date_until})
+    return resp.json()
+
 
 @mcp.tool()
 def get_customers(
@@ -123,8 +156,9 @@ def get_customers(
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.CUSTOMERS.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.customers], headers=AUTH_HEADERS, params=params)
     return resp.json()
+
 
 @mcp.tool()
 def get_customers_count_projects(
@@ -166,6 +200,7 @@ def get_entries_texts(
     resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.ENTRIES_TEXTS.value, headers=AUTH_HEADERS, params=params)
     return resp.json()
 
+
 @mcp.tool()
 def get_holidayscarry(year: Optional[int] = None, users_id: Optional[int] = None) -> dict:
     """
@@ -178,6 +213,7 @@ def get_holidayscarry(year: Optional[int] = None, users_id: Optional[int] = None
         params['users_id'] = users_id
     resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.HOLIDAYS_CARRY.value, headers=AUTH_HEADERS, params=params)
     return resp.json()
+
 
 @mcp.tool()
 def get_overtimecarry(year: Optional[int] = None, users_id: Optional[int] = None) -> dict:
@@ -192,6 +228,7 @@ def get_overtimecarry(year: Optional[int] = None, users_id: Optional[int] = None
     resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.OVERTIME_CARRY.value, headers=AUTH_HEADERS, params=params)
     return resp.json()
 
+
 @mcp.tool()
 def get_overtimereductions(users_id: Optional[list] = None) -> dict:
     """
@@ -203,22 +240,11 @@ def get_overtimereductions(users_id: Optional[list] = None) -> dict:
     resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.OVERTIME_REDUCTIONS.value, headers=AUTH_HEADERS, params=params)
     return resp.json()
 
-class ApiProjectsReportsV3_SortForIndex(str, Enum):
-    customers_name = "customers_name"
-    customers_name_desc = "-customers_name"
-    projects_name = "projects_name"
-    projects_name_desc = "-projects_name"
-
-class ProjectsReportsFilter(BaseModel):
-    active: Optional[bool] = None
-    fulltext: Optional[str] = None
-    budget_source: Optional[list[BudgetSource]] = None
-
 
 @mcp.tool()
 def get_projects_reports(
     filter: Optional[ProjectsReportsFilter] = None,
-    sort: Optional[list[ApiProjectsReportsV3_SortForIndex]] = None,
+    sort: Optional[list[ApiProjectsReports_SortForIndex]] = None,
     page: Optional[int] = None,
     items_per_page: Optional[int] = None
 ) -> dict:
@@ -237,13 +263,6 @@ def get_projects_reports(
         params['items_per_page'] = items_per_page
     resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.PROJECTS_REPORTS.value, headers=AUTH_HEADERS, params=params)
     return resp.json()
-
-
-class SubprojectsFilter(BaseModel):
-    active: Optional[bool] = None
-    completed: Optional[bool] = None
-    fulltext: Optional[str] = None
-    projects_id: Optional[int] = None
 
 
 @mcp.tool()
@@ -269,8 +288,6 @@ def get_subprojects(
     resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.SUBPROJECTS.value, headers=AUTH_HEADERS, params=params)
     return resp.json()
 
-class TeamsFilter(BaseModel):
-    fulltext: Optional[str] = None
 
 @mcp.tool()
 def get_teams(
@@ -330,9 +347,6 @@ def get_users_all(
         params=params
     )
     prepped = req.prepare()
-    # TODO: remove
-    #with open("debug.txt", "w") as f:
-    #    f.write(prepped.url + "\n")
     resp = requests.Session().send(prepped)
     return resp.json()
 
@@ -357,13 +371,6 @@ def get_users_nonbusinessgroups(
     resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.USERS_NONBUSINESS_GROUPS.value, headers=AUTH_HEADERS, params=params)
     return resp.json()
 
-class AbsencesFilter(BaseModel):
-    status: Optional[list[AbsenceStatus]] = None
-    teams_id: Optional[list[Optional[int]]] = None
-    type: Optional[list[AbsenceType]] = None
-    users_active: Optional[bool] = None
-    users_id: Optional[list[int]] = None
-    year: Optional[list[int]] = None
 
 @mcp.tool()
 def get_absences(
@@ -437,8 +444,8 @@ def get_projects(
 
 @mcp.tool()
 def get_projects_reports_v4(
-    filter: Optional[ProjectsReportsV4Filter] = None,
-    sort: Optional[list[ApiProjectsReportsV4_SortForIndex]] = None,
+    filter: Optional[ProjectsReportsFilter] = None,
+    sort: Optional[list[ApiProjectsReports_SortForIndex]] = None,
     page: Optional[int] = None,
     items_per_page: Optional[int] = None
 ) -> dict:

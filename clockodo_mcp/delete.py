@@ -5,36 +5,26 @@ from typing import Optional
 
 import requests
 
-from clockodo_mcp.utils import ServiceEnum, id_endpoint_map
+from clockodo_mcp.utils import Service, id_endpoint_map
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
 
 
 class ServiceDeleteSingleId(Enum):
     """ list of services that support delete endpoint with and id"""
-    ServiceEnum.targethours = ServiceEnum.targethours.value
-    ServiceEnum.accessgroups = ServiceEnum.accessgroups.value
-    ServiceEnum.entries = ServiceEnum.entries.value
-    ServiceEnum.holidaysquota = ServiceEnum.holidaysquota.value
-    ServiceEnum.nonbusinessdays = ServiceEnum.nonbusinessdays.value
-    ServiceEnum.nonbusinessgroups = ServiceEnum.nonbusinessgroups.value
-    ServiceEnum.holidayscarry = ServiceEnum.holidayscarry.value
-    ServiceEnum.overtimecarry = ServiceEnum.overtimecarry.value
-    ServiceEnum.overtimereductions = ServiceEnum.overtimereductions.value
-    ServiceEnum.teams = ServiceEnum.teams.value
-    ServiceEnum.users = ServiceEnum.users.value
-    ServiceEnum.usersnonbusinessgroups = ServiceEnum.usersnonbusinessgroups.value
-    ServiceEnum.absences = ServiceEnum.absences.value
+    targethours = Service.targethours.value
+    accessgroups = Service.accessgroups.value
+    entries = Service.entries.value
+    holidaysquota = Service.holidaysquota.value
+    nonbusinessdays = Service.nonbusinessdays.value
+    nonbusinessgroups = Service.nonbusinessgroups.value
+    holidayscarry = Service.holidayscarry.value
+    overtimecarry = Service.overtimecarry.value
+    overtimereductions = Service.overtimereductions.value
+    teams = Service.teams.value
+    users = Service.users.value
+    usersnonbusinessgroups = Service.usersnonbusinessgroups.value
+    absences = Service.absences.value
 
-
-@mcp.tool()
-def get(id: int, service: ServiceEnum) -> dict:
-    """ Get entity by ID """
-    endpoint_template = id_endpoint_map.get(service)
-    if not endpoint_template:
-        raise ValueError(f"No endpoint mapping found for service: {service.value}")
-    endpoint = endpoint_template.format(id=id)
-    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS)
-    return resp.json()
 
 @mcp.tool()
 def delete(service: ServiceDeleteSingleId, id: int, dry_run: Optional[bool], force: Optional[bool]) -> dict:
@@ -70,9 +60,9 @@ def delete_entrygroup(id: int,
     users_id: User ID for whom the entry group should be deleted.
     start_new: Whether to start a new clock entry after deleting the entry group. 
     """
-    endpoint_template = id_endpoint_map.get(ServiceEnum.entrygroups)
+    endpoint_template = id_endpoint_map.get(Service.entrygroups)
     if not endpoint_template:
-        raise ValueError(f"No endpoint mapping found for service: {ServiceEnum.entrygroups.value}")
+        raise ValueError(f"No endpoint mapping found for service: {Service.entrygroups.value}")
     endpoint = endpoint_template.format(id=id)
     params = {}
     if away is not None:
