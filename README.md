@@ -24,3 +24,6 @@ datamodel-codegen --input openapi.yaml --output clockodo_mcp/payload_models.py -
 ```
 with the openapi.yaml that was provided by clockodo. (use datmodel-codegen >= 0.4.0)
 
+
+## Known problems:
+datamodel-codegen is used and some enums lose their names (CustomerColor), bugreport is open

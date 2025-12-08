@@ -1,6 +1,8 @@
+from dataclasses import Field
+from pydantic import BaseModel
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import TargetHourType
-from clockodo_mcp.utils import Service, noid_endpoint_map, id_endpoint_map
+from clockodo_mcp.models import ChangeRequestIntervalType, TargetHourType
+from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
 from typing import Optional
 
@@ -135,3 +137,36 @@ def update_targethour(
 	resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
 	return resp.json()
 
+
+
+class WorkTimesChangeRequestChange(BaseModel):
+	type: ChangeRequestIntervalType = Field(..., description="1=Added, 2=Removed")
+	time_since: str  # ISO 8601 datetime string
+	time_until: str  # ISO 8601 datetime string
+
+
+@mcp.tool()
+def create_worktimeschangerequest(
+	date: str,
+	users_id: int,
+	changes: list[ChangeRequestIntervalType],
+) -> dict:
+	"""
+	Create a worktimes change request (POST /v2/workTimes/changeRequests)
+
+    date (str): Date for the change request. Format: YYYY-MM-DD. Example: "2023-02-28"
+    users_id (int): User ID. Minimum: 1. Example: 42
+    changes: List of change objects. Each object must include:
+        type (str): ChangeRequestIntervalType
+        time_since (str): Start time (ISO 8601). Example: "2023-02-28T12:00:00Z"
+        time_until (str): End time (ISO 8601). Example: "2023-02-28T12:00:00Z"
+
+	"""
+	payload = {
+		"date": date,
+		"users_id": users_id,
+		"changes": flatten_dict(changes, "changes"),
+	}
+	endpoint = noid_endpoint_map.get(Service.worktimeschangerequest)
+	resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+	return resp.json()
