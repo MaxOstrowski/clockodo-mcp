@@ -350,3 +350,49 @@ def update_clock(
     return resp.json()
 
 
+@mcp.tool()
+def create_or_update_entry(
+    customers_id: Optional[int] = None,
+    services_id: Optional[int] = None,
+    users_id: Optional[int] = None,
+    time_since: Optional[str] = None,
+    time_until: Optional[str] = None,
+    text: Optional[str] = None,
+    billable: Optional[bool] = None,
+    projects_id: Optional[int] = None,
+    subprojects_id: Optional[int] = None,
+    lump_sum_services_id: Optional[int] = None,
+    pause_duration: Optional[int] = None,
+    is_clocked: Optional[bool] = None,
+    clocked_since: Optional[str] = None,
+    clocked_until: Optional[str] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update an entry in Clockodo MCP.
+    If id is provided, updates the entry
+    If id is not provided, creates a new entry 
+    """
+    payload = {
+        "customers_id": customers_id,
+        "services_id": services_id,
+        "users_id": users_id,
+        "time_since": time_since,
+        "time_until": time_until,
+        "text": text,
+        "billable": billable,
+        "projects_id": projects_id,
+        "subprojects_id": subprojects_id,
+        "lump_sum_services_id": lump_sum_services_id,
+        "pause_duration": pause_duration,
+        "is_clocked": is_clocked,
+        "clocked_since": clocked_since,
+        "clocked_until": clocked_until
+    }
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.entries).format(id=id)
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.entries)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
