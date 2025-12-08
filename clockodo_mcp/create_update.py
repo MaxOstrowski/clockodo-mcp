@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, ChangeRequestIntervalType, TargetHourType
+from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, ChangeRequestIntervalType, TargetHourType
 from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
 from typing import Optional
@@ -266,6 +266,87 @@ def create_accessgroup(
         payload["users_ids"] = users_ids
     endpoint = noid_endpoint_map.get(Service.accessgroups)
     resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+@mcp.tool()
+def create_clock(
+    customers_id: int,
+    services_id: int,
+    billable: Optional[Billable] = None,
+    duration_transfer: Optional[int] = None,
+    projects_id: Optional[int] = None,
+    subprojects_id: Optional[int] = None,
+    text: Optional[str] = None,
+    time_since: Optional[str] = None,
+    users_id: Optional[int] = None
+) -> dict:
+    """
+    Start a clock (begin a time entry).
+    customers_id (int): Customer ID
+    services_id (int): Service ID
+    billable (int, optional): Billable status
+    duration_transfer (int, optional): Duration transfer
+    projects_id (int, optional): Project ID
+    subprojects_id (int, optional): Subproject ID
+    text (str, optional): Entry text (max 1000 chars)
+    time_since (str, optional): Start time (ISO 8601)
+    users_id (int, optional): User ID
+    """
+    payload = {
+        "customers_id": customers_id,
+        "services_id": services_id
+    }
+    if billable is not None:
+        payload["billable"] = billable.value
+    if duration_transfer is not None:
+        payload["duration_transfer"] = duration_transfer
+    if projects_id is not None:
+        payload["projects_id"] = projects_id
+    if subprojects_id is not None:
+        payload["subprojects_id"] = subprojects_id
+    if text is not None:
+        payload["text"] = text
+    if time_since is not None:
+        payload["time_since"] = time_since
+    if users_id is not None:
+        payload["users_id"] = users_id
+    endpoint = noid_endpoint_map.get(Service.clock)
+    resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+@mcp.tool()
+def update_clock(
+    id: int,
+    time_since: Optional[str] = None,
+    time_since_before: Optional[str] = None,
+    time_until_before: Optional[str] = None,
+    duration: Optional[int] = None,
+    duration_before: Optional[int] = None
+) -> dict:
+    """
+    Change duration of a clock entry.
+    id (int): Clock entry ID
+    time_since (str, optional): New start time (ISO 8601)
+    time_since_before (str, optional): Previous start time (ISO 8601)
+    time_until_before (str, optional): Previous end time (ISO 8601)
+    duration (int, optional): New duration
+    duration_before (int, optional): Previous duration
+    """
+    payload = {}
+    if time_since is not None:
+        payload["time_since"] = time_since
+    if time_since_before is not None:
+        payload["time_since_before"] = time_since_before
+    if time_until_before is not None:
+        payload["time_until_before"] = time_until_before
+    if duration is not None:
+        payload["duration"] = duration
+    if duration_before is not None:
+        payload["duration_before"] = duration_before
+    endpoint = id_endpoint_map.get(Service.clock).format(id=id)
+    resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
 
 
