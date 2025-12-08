@@ -31,10 +31,15 @@ class ServiceDeleteSingleId(Enum):
 def delete(service: ServiceDeleteSingleId, id: int, dry_run: Optional[bool], force: Optional[bool]) -> dict:
     """ Delete entity by ID. 
 
-    Dranrun and force only available for customer, subproject, lumpsumservice, project, service.
+    Dryrun and force only available for customer, subproject, lumpsumservice, project, service.
     
     """
-    endpoint_template = id_endpoint_map.get(service)
+    # Map ServiceDeleteSingleId to Service enum for endpoint lookup
+    try:
+        service_enum = Service(service.value)
+    except ValueError:
+        raise ValueError(f"Invalid service value: {service.value}")
+    endpoint_template = id_endpoint_map.get(service_enum)
     if not endpoint_template:
         raise ValueError(f"No endpoint mapping found for service: {service.value}")
     endpoint = endpoint_template.format(id=id)
