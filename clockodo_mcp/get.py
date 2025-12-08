@@ -173,7 +173,7 @@ def get_customers_count_projects(
         params['customers_id'] = customers_id
     if scope is not None:
         params['scope'] = scope.value
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.CUSTOMERS_COUNT_PROJECTS.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.customers_count_projects], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -197,7 +197,7 @@ def get_entries_texts(
     if filter is not None:
         filter_dict = filter.model_dump(exclude_none=True)
         params.update(flatten_dict(filter_dict, parent_key='filter'))
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.ENTRIES_TEXTS.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.entries_texts], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -211,7 +211,7 @@ def get_holidayscarry(year: Optional[int] = None, users_id: Optional[int] = None
         params['year'] = year
     if users_id is not None:
         params['users_id'] = users_id
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.HOLIDAYS_CARRY.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.holidayscarry], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -225,7 +225,7 @@ def get_overtimecarry(year: Optional[int] = None, users_id: Optional[int] = None
         params['year'] = year
     if users_id is not None:
         params['users_id'] = users_id
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.OVERTIME_CARRY.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.overtimecarry], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -237,7 +237,7 @@ def get_overtimereductions(users_id: Optional[list] = None) -> dict:
     params = {}
     if users_id is not None:
         params['users_id'] = users_id
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.OVERTIME_REDUCTIONS.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.overtimereductions], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -261,7 +261,7 @@ def get_projects_reports(
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.PROJECTS_REPORTS.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.projects_reports], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -285,7 +285,7 @@ def get_subprojects(
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.SUBPROJECTS.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.subprojects], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -312,7 +312,7 @@ def get_teams(
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.TEAMS.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.teams], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
     
@@ -342,7 +342,7 @@ def get_users_all(
     # Build the request object to get the final URL
     req = requests.Request(
         "GET",
-        url=BASE_URL + ServiceEnumListAuto.USERS_ALL.value,
+        url=BASE_URL + noid_endpoint_map[Service.users],
         headers=AUTH_HEADERS,
         params=params
     )
@@ -368,7 +368,7 @@ def get_users_nonbusinessgroups(
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.USERS_NONBUSINESS_GROUPS.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.usersnonbusinessgroups], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -386,7 +386,7 @@ def get_absences(
         params.update(flatten_dict(filter_dict))
     if scope is not None:
         params['scope'] = scope.value
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.ABSENCES.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.absences], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -410,7 +410,7 @@ def get_lumpsumservices(
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.LUMPSUM_SERVICES.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.lumpsumservices], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -437,7 +437,7 @@ def get_projects(
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.PROJECTS.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.projects], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -462,7 +462,7 @@ def get_projects_reports_v4(
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.PROJECTS_REPORTS_V4.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.projects_reports], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 
@@ -489,5 +489,5 @@ def get_services(
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + ServiceEnumListAuto.SERVICES.value, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.services], headers=AUTH_HEADERS, params=params)
     return resp.json()

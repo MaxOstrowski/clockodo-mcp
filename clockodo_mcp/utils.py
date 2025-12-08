@@ -23,6 +23,7 @@ class Service(Enum):
     accessgroups = "accessgroups"
     clock = "clock"
     entries = "entries"
+    entries_texts = "entries_texts"
     entrygroups = "entrygroups"
     holidaysquota = "holidaysquota"
     individualuseraccess_users_clear = "individualuseraccess_users_clear"
@@ -37,6 +38,7 @@ class Service(Enum):
     users_access_customers_projects = "users_access_customers_projects"
     users_access_services = "users_access_services"
     customers = "customers"
+    customers_count_projects = "customers_count_projects"
     holidayscarry = "holidayscarry"
     overtimecarry = "overtimecarry"
     overtimereductions = "overtimereductions"
@@ -47,6 +49,7 @@ class Service(Enum):
     absences = "absences"
     lumpsumservices = "lumpsumservices"
     projects = "projects"
+    projects_reports = "projects_reports"
     services = "services"
 
 id_endpoint_map = {
@@ -101,6 +104,7 @@ noid_endpoint_map = {
     Service.nonbusinessdays: "/v2/nonbusinessDays",
     Service.nonbusinessgroups: "/v2/nonbusinessGroups",
     Service.customers: "/v3/customers",
+    Service.customers_count_projects: "/v3/customers/countProjects",
     Service.holidayscarry: "/v3/holidaysCarry",
     Service.overtimecarry: "/v3/overtimeCarry",
     Service.overtimereductions: "/v3/overtimeReductions",
@@ -111,29 +115,10 @@ noid_endpoint_map = {
     Service.absences: "/v4/absences",
     Service.lumpsumservices: "/v4/lumpSumServices",
     Service.projects: "/v4/projects",
+    Service.projects_reports: "/v4/projects/reports",
     Service.services: "/v4/services",
+    Service.entries_texts: "/v3/entriesTexts",
 }
-
-
-# TODO: get rid of the auto list
-
-class ServiceEnumListAuto(Enum):
-    CUSTOMERS = "/v3/customers"
-    CUSTOMERS_COUNT_PROJECTS = "/v3/customers/countProjects"
-    ENTRIES_TEXTS = "/v3/entriesTexts"
-    HOLIDAYS_CARRY = "/v3/holidaysCarry"
-    OVERTIME_CARRY = "/v3/overtimeCarry"
-    OVERTIME_REDUCTIONS = "/v3/overtimeReductions"
-    PROJECTS_REPORTS = "/v3/projects/reports"
-    SUBPROJECTS = "/v3/subprojects"
-    TEAMS = "/v3/teams"
-    USERS_ALL = "/v3/users"
-    USERS_NONBUSINESS_GROUPS = "/v3/usersNonbusinessGroups"
-    ABSENCES = "/v4/absences"
-    LUMPSUM_SERVICES = "/v4/lumpSumServices"
-    PROJECTS = "/v4/projects"
-    PROJECTS_REPORTS_V4 = "/v4/projects/reports"
-    SERVICES = "/v4/services"
 
 # TODO:
 # /v2/workTimes/changeRequests/{id}/approve
