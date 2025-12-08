@@ -122,13 +122,13 @@ def get_users(id: int, scope: Optional[UserScope]) -> dict:
 
 
 @mcp.tool()
-def get_worktimes(user_id: int, date_since: str, date_until: str) -> dict:
+def get_worktimes(users_id: int, date_since: str, date_until: str) -> dict:
     """
     Get worktimes by user ID and date range.
     example date: '2023-01-01'
     """
     endpoint = noid_endpoint_map.get(Service.worktimes)
-    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params={"user_id": user_id, "date_since": date_since, "date_until": date_until})
+    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params={"users_id": users_id, "date_since": date_since, "date_until": date_until})
     return resp.json()
 
 
