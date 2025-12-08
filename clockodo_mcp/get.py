@@ -6,7 +6,7 @@ from typing import Optional
 import requests
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, mcp, BASE_URL
 
-from clockodo_mcp.models import UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
+from clockodo_mcp.models import ChangeRequestStatus, UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
 from clockodo_mcp.utils import TeamsFilter, AbsencesFilter, ApiProjectsReports_SortForIndex, ApiUsersV3_SortForIndex, CustomerFilter, EntriesTextFilter, LumpSumServicesFilter, ProjectsFilter, ProjectsReportsFilter, Service, ServicesFilter, SubprojectsFilter, UsersFilter, UsersNonbusinessGroupsFilter, flatten_dict, id_endpoint_map, noid_endpoint_map
 
 
@@ -79,6 +79,38 @@ def get(id: int, service: ServiceGetById) -> dict:
     return resp.json()
 
 # manually written get functions for services with special parameters
+
+
+@mcp.tool()
+def get_worktimeschangerequests(
+    date_since: Optional[str] = None,
+    date_until: Optional[str] = None,
+    users_id: Optional[int] = None,
+    status: Optional[ChangeRequestStatus] = None,
+    scope: Optional[str] = None,
+    teams_id: Optional[list[int]] = None
+) -> dict:
+    """
+    Get worktimes change requests with optional filters.
+    Returns a list of change requests
+    """
+    params = {}
+    if date_since is not None:
+        params["date_since"] = date_since
+    if date_until is not None:
+        params["date_until"] = date_until
+    if users_id is not None:
+        params["users_id"] = users_id
+    if status is not None:
+        params["status"] = status
+    if scope is not None:
+        params["scope"] = scope
+    if teams_id is not None:
+        params["teams_id"] = teams_id
+    endpoint = noid_endpoint_map.get(Service.worktimeschangerequest)
+    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=params)
+    return resp.json()
+
 
 @mcp.tool()
 def get_userreports(id: int, year: int, type: Optional[UserReportType]) -> dict:

@@ -24,6 +24,7 @@ class ServiceDeleteSingleId(Enum):
     users = Service.users.value
     usersnonbusinessgroups = Service.usersnonbusinessgroups.value
     absences = Service.absences.value
+    worktimeschangerequest = Service.worktimeschangerequest.value
 
 
 @mcp.tool()

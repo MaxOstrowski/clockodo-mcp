@@ -14,6 +14,7 @@ class Service(Enum):
     targethours = "targethours"
     userreports = "userreports"
     worktimes = "worktimes"
+    worktimeschangerequest = "worktimeschangerequest"
     accessgroups_customers = "accessgroups_customers"
     accessgroups_customers_general = "accessgroups_customers_general"
     accessgroups_customersprojects = "accessgroups_customersprojects"
