@@ -149,10 +149,11 @@ class WorkTimesChangeRequestChange(BaseModel):
 def create_worktimeschangerequest(
 	date: str,
 	users_id: int,
-	changes: list[ChangeRequestIntervalType],
+	changes: list[WorkTimesChangeRequestChange],
 ) -> dict:
 	"""
-	Create a worktimes change request (POST /v2/workTimes/changeRequests)
+	Create a worktimes change request to modify work times for a user.
+	After creation of the request, the worktime can be changed or deleted.
 
     date (str): Date for the change request. Format: YYYY-MM-DD. Example: "2023-02-28"
     users_id (int): User ID. Minimum: 1. Example: 42
@@ -162,10 +163,11 @@ def create_worktimeschangerequest(
         time_until (str): End time (ISO 8601). Example: "2023-02-28T12:00:00Z"
 
 	"""
+	change_dict = changes.model_dump(exclude_none=True)
 	payload = {
 		"date": date,
 		"users_id": users_id,
-		"changes": flatten_dict(changes, "changes"),
+		"changes": flatten_dict(change_dict, "changes"),
 	}
 	endpoint = noid_endpoint_map.get(Service.worktimeschangerequest)
 	resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
