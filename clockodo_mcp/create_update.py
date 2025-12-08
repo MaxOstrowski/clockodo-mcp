@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import ChangeRequestIntervalType, TargetHourType
+from clockodo_mcp.models import AccessType, AccessValue, ChangeRequestIntervalType, TargetHourType
 from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
 from typing import Optional
@@ -171,3 +171,32 @@ def create_worktimeschangerequest(
 	endpoint = noid_endpoint_map.get(Service.worktimeschangerequest)
 	resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
 	return resp.json()
+
+
+@mcp.tool()
+def update_accessgroups_customer(
+    accessGroupsId: int,
+    type: AccessType,
+    value: AccessValue,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Update customer access for a specific access group. If id is provided, updates a specific customer; otherwise, updates general customer access.
+    accessGroupsId (int): Access group ID
+    type (AccessType): Access type
+    value (AccessValue): Access value
+    id (int, optional): Customer ID
+    """
+    payload = {
+        "type": type.value,
+        "value": value.value
+    }
+    if id is not None:
+        payload["id"] = id
+        endpoint = id_endpoint_map.get(Service.accessgroups_customers).format(id=accessGroupsId)
+    else:
+        endpoint = id_endpoint_map.get(Service.accessgroups_customers_general).format(id=accessGroupsId)
+    resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
