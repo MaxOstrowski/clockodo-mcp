@@ -1,5 +1,5 @@
 import clockodo_mcp.clockodo_mcp
-import clockodo_mcp.get_id
+import clockodo_mcp.get
 
 def main():
     clockodo_mcp.clockodo_mcp.mcp.run(transport="stdio")
