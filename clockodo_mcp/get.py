@@ -92,7 +92,7 @@ def get_worktimeschangerequests(
 ) -> dict:
     """
     Get worktimes change requests with optional filters.
-    Returns a list of change requests
+    Returns a list of change requests, only if a change request has been created before.
     """
     params = {}
     if date_since is not None:
