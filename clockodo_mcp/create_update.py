@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import AccessType, AccessValue, ChangeRequestIntervalType, TargetHourType
+from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, ChangeRequestIntervalType, TargetHourType
 from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
 from typing import Optional
@@ -197,6 +197,75 @@ def update_accessgroups_customer(
     else:
         endpoint = id_endpoint_map.get(Service.accessgroups_customers_general).format(id=accessGroupsId)
     resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+@mcp.tool()
+def update_accessgroups_project(
+    accessGroupsId: int,
+    id: int,
+    type: AccessType,
+    value: ApiAccessGroupsProjectsV2AccessValueForPut
+) -> dict:
+    """
+    Update project access for a specific access group.
+    accessGroupsId (int): Access group ID
+    id (int): Project ID
+    type (str): AccessType
+    value (str): ApiAccessGroupsProjectsV2_AccessValueForPut, Use 0 for no access. Use 1 for full access.
+    """
+    payload = {
+        "id": id,
+        "type": type.value,
+        "value": value.value
+    }
+    endpoint = id_endpoint_map.get(Service.accessgroups_projects).format(id=accessGroupsId)
+    resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+@mcp.tool()
+def update_accessgroups_service(
+    accessGroupsId: int,
+    type: ApiAccessGroupsServicesV2AccessTypeForPut,
+    value: ApiAccessGroupsServicesV2AccessValueForPut,
+	id: Optional[int],
+) -> dict:
+    """
+    Update service access for a specific access group. If id is provided, updates a specific service; otherwise, updates general service access.
+    accessGroupsId (int): Access group ID
+    id (int): Service ID
+    type (str): ApiAccessGroupsServicesV2_AccessTypeForPut
+    value (str): ApiAccessGroupsServicesV2_AccessValueForPut, Use 0 for no access. Use 1 for full access.
+    """
+    payload = {
+        "type": type.value,
+        "value": value.value,
+    }
+    if id is not None:
+        payload["id"] = id
+        endpoint = id_endpoint_map.get(Service.accessgroups_services).format(id=accessGroupsId)
+    else:
+        endpoint = id_endpoint_map.get(Service.accessgroups_services_general).format(id=accessGroupsId)
+    resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+@mcp.tool()
+def create_accessgroup(
+    name: str,
+    users_ids: Optional[list[int]] = None
+) -> dict:
+    """
+    Create a new access group.
+    name (str): Name of the access group (max 100 chars)
+    users_ids: IDs of group members
+    """
+    payload = {"name": name}
+    if users_ids is not None:
+        payload["users_ids"] = users_ids
+    endpoint = noid_endpoint_map.get(Service.accessgroups)
+    resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
 
 
