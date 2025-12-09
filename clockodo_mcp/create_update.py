@@ -1,7 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, TargetHourType
+from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, NonbusinessDayType, TargetHourType
 from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
 from typing import Optional
@@ -536,13 +536,83 @@ def update_individual_user_access(
     payload = {"value": value.value}
     if access_type == IndividualUserAccessType.PROJECT:
         endpoint = id_endpoint_map.get(Service.individualuseraccess_users_projects).format(id=users_id)
-        payload = {"id": id}
+        payload["id"] = id
     elif access_type == IndividualUserAccessType.SERVICE:
         endpoint = id_endpoint_map.get(Service.individualuseraccess_users_services).format(id=users_id)
-        payload = {"id": id}
+        payload["id"] = id
     elif access_type == IndividualUserAccessType.SERVICE_GENERAL:
         endpoint = id_endpoint_map.get(Service.individualuseraccess_users_services_general).format(id=users_id)
     else:
         raise ValueError("Invalid access_type")
     resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+@mcp.tool()
+def create_or_update_nonbusiness_day(
+    nonbusiness_group_id: int,
+    type: NonbusinessDayType,
+    name: str,
+    half_day: bool,
+    surcharge_special: bool,
+    evaluated_date: str,
+    special_id: Optional[int] = None,
+    day: Optional[int] = None,
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update a nonbusiness day.
+    If id is provided, updates the nonbusiness day
+    If id is not provided, creates a new nonbusiness day
+    """
+    payload = {
+        "nonbusiness_group_id": nonbusiness_group_id,
+        "type": type.value,
+        "name": name,
+        "half_day": half_day,
+        "surcharge_special": surcharge_special,
+        "evaluated_date": evaluated_date
+    }
+    if special_id is not None:
+        payload["special_id"] = special_id
+    if day is not None:
+        payload["day"] = day
+    if month is not None:
+        payload["month"] = month
+    if year is not None:
+        payload["year"] = year
+
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.nonbusinessdays).format(id=id)
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.nonbusinessdays)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+@mcp.tool()
+def create_or_update_nonbusiness_group(
+    name: str,
+    company_default: bool,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update a nonbusiness group.
+    If id is provided, updates the nonbusiness group (PUT).
+    If id is not provided, creates a new nonbusiness group (POST).
+    """
+    payload = {
+        "name": name,
+        "company_default": company_default
+    }
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.nonbusinessgroups).format(id=id)
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        payload["id"] = id
+        endpoint = noid_endpoint_map.get(Service.nonbusinessgroups)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
