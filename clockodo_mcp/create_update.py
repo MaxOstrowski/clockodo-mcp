@@ -934,3 +934,31 @@ def create_or_update_subproject(
         endpoint = noid_endpoint_map.get(Service.subprojects)
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
+
+
+@mcp.tool()
+def create_or_update_team(
+    name: Optional[str] = None,
+    leader: Optional[int] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update a team.
+    If id is provided, updates the team, else creates a new team.
+    Fields:
+        name: Team name (required for create, max 100 chars)
+        leader: User ID of the team leader
+        id: Team ID for update
+    """
+    payload = {}
+    if name is not None:
+        payload["name"] = name
+    if leader is not None:
+        payload["leader"] = leader
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.teams).format(id=id)
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.teams)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
