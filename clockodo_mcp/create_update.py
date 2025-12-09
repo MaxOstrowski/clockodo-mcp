@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from enum import Enum
 from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, CustomerColor, GeneralAccessV2, NonbusinessDayType, TargetHourType, Thresholds
+from clockodo_mcp.models import AbsenceStatus, AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, CustomerColor, GeneralAccessV2, NonbusinessDayType, TargetHourType, Thresholds
 from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
 from typing import Optional, Union
@@ -117,7 +117,7 @@ def update_targethour(
 			Is workday. Example: True
 		compensation_daily (float): Compensation per day in minutes. Min: 0, Max: 1440. Example: 30.0
 		compensation_monthly (float): Compensation per month in minutes. Min: 0, Max: 744. Example: 160.0
-		holiday_fixed_credit (int): Fixed holiday credit. Enum: [0, 1]. Example: 1
+		holiday_fixed_credit (int): Fixed holiday credit. Enum: [0, 1]. E
 		surcharge_models_id (int): Surcharge model ID. Min: 1. Example: 5
 	"""
 	payload = {
@@ -962,3 +962,104 @@ def create_or_update_team(
         endpoint = noid_endpoint_map.get(Service.teams)
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
+
+
+@mcp.tool()
+def create_or_update_usersnonbusinessgroup(
+    users_id: int,
+    nonbusiness_groups_id: int,
+    date_since: str,
+    date_until: Optional[Union[str, None]] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update a usersnonbusinessgroup assignment.
+    If `id` is provided, updates the assignment; otherwise, creates a new one.
+    date_since: Start date (YYYY-MM-DD). Example: "2025-01-31"
+    date_until: End date (YYYY-MM-DD or null). Example: "2025-02-28"
+    """
+    payload = {
+        "users_id": users_id,
+        "nonbusiness_groups_id": nonbusiness_groups_id,
+        "date_since": date_since,
+    }
+    if date_until is not None:
+        payload["date_until"] = date_until
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.usersnonbusinessgroups).format(id=id)
+        response = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.usersnonbusinessgroups)
+        response = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return response.json()
+
+
+@mcp.tool()
+def create_or_update_absence(
+    date_since: str,
+    type: str,
+    users_id: Optional[int] = None,
+    date_until: Optional[str] = None,
+    half_day: Optional[bool] = None,
+    count_hours: Optional[float] = None,
+    allow_override: Optional[list[int]] = None,
+    status: Optional[AbsenceStatus] = None,
+    sick_note: Optional[bool] = None,
+    note: Optional[str] = None,
+    public_note: Optional[str] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update an absence entry.
+    If `id` is provided, updates the absence; otherwise, creates a new one.
+    Fields:
+        date_since: Start date (YYYY-MM-DD). Example: "2023-02-28"
+        type: Absence type. Example: "vacation"
+        users_id: User ID. Example: 42
+        date_until: End date (YYYY-MM-DD or null). Example: "2023-03-01"
+        half_day: Is half day absence
+        count_hours: Number of hours (float). Example: 8.0
+        allow_override: List of absence IDs to override in case of conflicts
+        status: Absence status. Possible values:
+    - `0`: Enquired
+    - `1`: Approved
+    - `2`: Declined
+    - `3`: ApprovalCancelled
+    - `4`: Cancelled
+        sick_note: Is sick note. Example: False
+        note: Internal note. Example: "Doctor's appointment"
+        public_note: Public note. Example: "Vacation"
+        id: Absence ID (for update only)
+    """
+    payload = {
+        "date_since": date_since,
+        "type": type,
+    }
+    if users_id is not None:
+        payload["users_id"] = users_id
+    if date_until is not None:
+        payload["date_until"] = date_until
+    if half_day is not None:
+        payload["half_day"] = half_day
+    if count_hours is not None:
+        payload["count_hours"] = count_hours
+    if allow_override is not None:
+        payload["allow_override"] = allow_override
+    if status is not None:
+        payload["status"] = status.value
+    if sick_note is not None:
+        payload["sick_note"] = sick_note
+    if note is not None:
+        payload["note"] = note
+    if public_note is not None:
+        payload["public_note"] = public_note
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.absences).format(id=id)
+        response = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        # Create new absence
+        endpoint = noid_endpoint_map.get(Service.absences)
+        response = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return response.json()
+
+
