@@ -1177,3 +1177,43 @@ def create_or_update_lumpsumservice(
     return response.json()
 
 
+@mcp.tool()
+def create_or_update_service(
+    name: str,
+    active: Optional[bool] = None,
+    number: Optional[str] = None,
+    note: Optional[str] = None,
+    bill_service_id: Optional[str] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update a service.
+    If `id` is provided, updates the service; otherwise, creates a new one.
+    Fields:
+        name: Service name (required, max 100 chars)
+        active: Is service active
+        number: Freely selectable number for the service (max 50 chars)
+        note: Note (max 1000 chars, only visible for owners or workers with elevated access)
+        bill_service_id: Billing service ID (max 50 chars, only for elevated access)
+        id: Service ID (for update only)
+    """
+    payload = {
+        "name": name,
+    }
+    if active is not None:
+        payload["active"] = active
+    if number is not None:
+        payload["number"] = number
+    if note is not None:
+        payload["note"] = note
+    if bill_service_id is not None:
+        payload["bill_service_id"] = bill_service_id
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.services).format(id=id)
+        response = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.services)
+        response = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return response.json()
+
+
