@@ -884,6 +884,10 @@ class SubprojectBudget(BaseModel):
     )
 
 
+class ProjectBudget(SubprojectBudget):
+    from_subprojects: Optional[bool] = None
+
+
 @mcp.tool()
 def create_or_update_subproject(
     projects_id: Optional[int] = None,
@@ -934,6 +938,69 @@ def create_or_update_subproject(
         endpoint = noid_endpoint_map.get(Service.subprojects)
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
+
+
+@mcp.tool()
+def create_or_update_project(
+    name: str,
+    customers_id: int,
+    active: Optional[bool] = None,
+    number: Optional[str] = None,
+    billable_default: Optional[bool] = None,
+    note: Optional[str] = None,
+    deadline: Optional[str] = None,
+    start_date: Optional[str] = None,
+    budget: Optional[ProjectBudget] = None,
+    bill_service_id: Optional[str] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update a project.
+    If `id` is provided, updates the project; otherwise, creates a new one.
+    Fields:
+        name: Project name (required, max 100 chars)
+        customers_id: Customer ID (required)
+        active: Is project active (optional)
+        number: Project number (max 50 chars, optional)
+        billable_default: Default billable (optional)
+        note: Note (max 1000 chars, optional)
+        deadline: Completion date (YYYY-MM-DD, optional)
+        start_date: Start date (YYYY-MM-DD, optional)
+        budget: Project budget (optional, see ProjectBudget)
+        bill_service_id: Billing service ID (max 50 chars, optional)
+        id: Project ID (for update only)
+    Example (create):
+        create_or_update_project(name="Website Redesign", customers_id=123)
+    Example (update):
+        create_or_update_project(id=1, name="Website Redesign", customers_id=123)
+    """
+    payload = {
+        "name": name,
+        "customers_id": customers_id,
+    }
+    if active is not None:
+        payload["active"] = active
+    if number is not None:
+        payload["number"] = number
+    if billable_default is not None:
+        payload["billable_default"] = billable_default
+    if note is not None:
+        payload["note"] = note
+    if deadline is not None:
+        payload["deadline"] = deadline
+    if start_date is not None:
+        payload["start_date"] = start_date
+    if budget is not None:
+        payload["budget"] = flatten_dict(budget.model_dump())
+    if bill_service_id is not None:
+        payload["bill_service_id"] = bill_service_id
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.projects).format(id=id)
+        response = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.projects)
+        response = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return response.json()
 
 
 @mcp.tool()
@@ -1059,6 +1126,53 @@ def create_or_update_absence(
     else:
         # Create new absence
         endpoint = noid_endpoint_map.get(Service.absences)
+        response = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return response.json()
+
+
+@mcp.tool()
+def create_or_update_lumpsumservice(
+    name: Optional[str] = None,
+    price: Optional[float] = None,
+    unit: Optional[str] = None,
+    active: Optional[bool] = None,
+    number: Optional[str] = None,
+    note: Optional[str] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update a lump sum service.
+    If `id` is provided, updates the service; otherwise, creates a new one.
+    Fields:
+        name: Service name (required, max 100 chars)
+        price: Price per unit (float, -99999999.99 to 99999999.99)
+        unit: Unit (max 6 chars, optional)
+        active: Is service active (optional)
+        number: Lump sum service number (max 50 chars, optional)
+        note: Note (max 1000 chars, optional, only visible for owners or workers with elevated access)
+        id: Service ID (for update only)
+    Example (create):
+        create_or_update_lumpsumservice(name="Consulting", price=500.0, unit="h", active=True)
+    Example (update):
+        create_or_update_lumpsumservice(id=1, name="Consulting", price=600.0)
+    """
+    payload = {
+        "name": name,
+        "price": price,
+    }
+    if unit is not None:
+        payload["unit"] = unit
+    if active is not None:
+        payload["active"] = active
+    if number is not None:
+        payload["number"] = number
+    if note is not None:
+        payload["note"] = note
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.lumpsumservices).format(id=id)
+        response = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.lumpsumservices)
         response = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return response.json()
 
