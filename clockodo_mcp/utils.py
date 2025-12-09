@@ -231,10 +231,14 @@ def flatten_dict(d: dict, parent_key: str =''):
                     items.extend(flatten_dict(item, new_key).items())
                 elif isinstance(item, bool):
                     items.append((new_key, str(item).lower()))
+                elif isinstance(item, Enum):
+                    items.append((new_key, item.value))
                 else:
                     items.append((new_key, item))
         elif isinstance(v, bool):
             items.append((new_key, str(v).lower()))
+        elif isinstance(v, Enum):
+            items.append((new_key, v.value))
         else:
             items.append((new_key, v))
     return dict(items)

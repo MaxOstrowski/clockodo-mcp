@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from enum import Enum
 from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, CustomerColor, GeneralAccessV2, NonbusinessDayType, TargetHourType
+from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, CustomerColor, GeneralAccessV2, NonbusinessDayType, TargetHourType, Thresholds
 from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
 from typing import Optional, Union
@@ -819,13 +819,13 @@ def create_or_update_overtimereduction(
 ) -> dict:
     """
     Create or update an overtime reduction record (v3).
-    If id is provided, updates the record (PUT /v3/overtimeReductions/{id}), else creates a new record (POST /v3/overtimeReductions).
+    If id is provided, updates the record, else creates a new record.
     Fields:
-        users_id (int): User ID (required for create)
-        date (str): Date of reduction (YYYY-MM-DD, required for create/update)
-        hours (float): Amount of hours reduced (required for create/update, -999 to 999)
-        note (str, optional): Note (max 1000)
-        id (int, optional): Record id for update
+        users_id: User ID (required for create)
+        date: Date of reduction (YYYY-MM-DD, required for create/update)
+        hours: Amount of hours reduced (required for create/update, -999 to 999)
+        note: max 1000 characters
+        id: Record id for update
     """
     payload = {}
     if users_id is not None:
@@ -845,3 +845,92 @@ def create_or_update_overtimereduction(
     return resp.json()
 
 
+
+from pydantic import BaseModel, Field
+
+
+class SubprojectBudget(BaseModel):
+    amount: Optional[float] = Field(
+        None,
+        description="Budget amount (float, -99999999.99 to 99999999.99)",
+        ge=-99999999.99,
+        le=99999999.99,
+    )
+    monetary: Optional[bool] = Field(
+        None,
+        description="Is the budget monetary?"
+    )
+    hard: Optional[bool] = Field(
+        None,
+        description="Is the budget hard?"
+    )
+    notification_thresholds: Optional[list[Thresholds]] = Field(
+        None,
+        description="List of notification thresholds (schema depends on Thresholds model) "
+                    "Percent50 = 50, "
+                    "Percent60 = 60, "
+                    "Percent70 = 70, "
+                    "Percent80 = 80, "
+                    "Percent90 = 90, "
+                    "Percent100 = 100, "
+                    "Percent110 = 110, "
+                    "Percent120 = 120, "
+                    "Percent130 = 130, "
+                    "Percent140 = 140, "
+                    "Percent150 = 150, "
+                    "Percent200 = 200, "
+                    "Percent250 = 250, "
+                    "Percent300 = 300"
+    )
+
+
+@mcp.tool()
+def create_or_update_subproject(
+    projects_id: Optional[int] = None,
+    name: Optional[str] = None,
+    billable_default: Optional[bool] = None,
+    budget: Optional[SubprojectBudget] = None,
+    number: Optional[str] = None,
+    note: Optional[str] = None,
+    start_date: Optional[str] = None,
+    deadline: Optional[str] = None,
+    bill_service_id: Optional[str] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update a subproject (v3).
+    If id is provided, updates the subproject else creates a new subproject.
+    Fields:
+        projects_id: Parent project ID (required for create)
+        name: Subproject name (required)
+        start_date: YYYY-MM-DD
+        deadline: YYYY-MM-DD
+        bill_service_id: Max 50 chars
+        id: Subproject ID for update
+    """
+    payload = {}
+    if projects_id is not None:
+        payload["projects_id"] = projects_id
+    if name is not None:
+        payload["name"] = name
+    if billable_default is not None:
+        payload["billable_default"] = billable_default
+    if budget is not None:
+        payload["budget"] = flatten_dict(budget.model_dump())
+    if number is not None:
+        payload["number"] = number
+    if note is not None:
+        payload["note"] = note
+    if start_date is not None:
+        payload["start_date"] = start_date
+    if deadline is not None:
+        payload["deadline"] = deadline
+    if bill_service_id is not None:
+        payload["bill_service_id"] = bill_service_id
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.subprojects).format(id=id)
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.subprojects)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
