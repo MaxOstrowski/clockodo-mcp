@@ -644,11 +644,11 @@ def create_or_update_customer_projects_access(
             payload[name] = access
         elif isinstance(access, CustomerProjectsAccess):
             payload[name]  = flatten_dict(access.model_dump())
-    if id is not None:
+    if users_id is not None:
         endpoint = id_endpoint_map.get(Service.users_access_customers_projects).format(id=users_id)
         resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     else:
-        endpoint = id_endpoint_map.get(Service.users_access_customers_projects).format(id=users_id)
+        endpoint = noid_endpoint_map.get(Service.users_access_customers_projects)
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
 
@@ -670,10 +670,10 @@ def create_or_update_service_access(
     """
     payload = {"add": add}
     if id is not None:
-        endpoint = id_endpoint_map.get(Service.users_access_services).format(id=users_id)
+        endpoint = id_endpoint_map.get(Service.users_access_services).format(id=id)
         resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     else:
-        endpoint = id_endpoint_map.get(Service.users_access_services).format(id=users_id)
+        endpoint = noid_endpoint_map.get(Service.users_access_services)
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
 
@@ -730,9 +730,82 @@ def create_or_update_customer(
     if bill_service_id is not None:
         payload["bill_service_id"] = bill_service_id
     if id is not None:
-        endpoint = f"/v3/customers/{id}"
+        endpoint = id_endpoint_map.get(Service.customers).format(id=id)
         resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     else:
-        endpoint = "/v3/customers"
+        endpoint = noid_endpoint_map.get(Service.customers)
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
+
+
+@mcp.tool()
+def create_or_update_holidayscarry(
+    year: int,
+    count: float,
+    note: Optional[str] = None,
+    users_id: Optional[int] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update a holiday carryover record (v3).
+    If id is provided, updates the record, else user_id is needed to create a new record.
+    Fields:
+        year (int): Year for the carryover (2000-2037)
+        count (float): Carryover amount, Only full and half values allowed, e.g. 4.0 or 4.5
+        note (str, optional): Note (max 1000)
+        id (int, optional): Record id for update
+    """
+    payload = {}
+    if year is not None:
+        payload["year"] = year
+    if users_id is not None:
+        payload["users_id"] = users_id
+    if count is not None:
+        payload["count"] = count
+    if note is not None:
+        payload["note"] = note
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.holidayscarry).format(id=id)
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.holidayscarry)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+@mcp.tool()
+def create_or_update_overtimecarry(
+    year: int,
+    count: float,
+    note: Optional[str] = None,
+    users_id: Optional[int] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update an overtime carryover record (v3).
+    If id is provided, updates the record, else users_id is needed to create a new record.
+    Fields:
+        year (int): Year for the carryover (2000-2037)
+        count (float): Carryover amount, can be negative or positive
+        note (str, optional): Note (max 1000)
+        users_id (int, optional): User id for create
+        id (int, optional): Record id for update
+    """
+    payload = {}
+    if year is not None:
+        payload["year"] = year
+    if users_id is not None:
+        payload["users_id"] = users_id
+    if count is not None:
+        payload["count"] = count
+    if note is not None:
+        payload["note"] = note
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.overtimecarry).format(id=id)
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.overtimecarry)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
