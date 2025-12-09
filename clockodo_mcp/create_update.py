@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, ChangeRequestIntervalType, TargetHourType
+from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, TargetHourType
 from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
 from typing import Optional
@@ -394,5 +394,109 @@ def create_or_update_entry(
         resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     else:
         endpoint = noid_endpoint_map.get(Service.entries)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+class EntryGroupFilter(BaseModel):
+    users_id: Optional[int] = None
+    teams_id: Optional[int] = None
+    customers_id: Optional[int] = None
+    projects_id: Optional[int] = None
+    subprojects_id: Optional[int] = None
+    services_id: Optional[int] = None
+    lumpsum_services_id: Optional[int] = None
+    billable: Optional[BillableDistinct] = None  # BillableDistinct
+    texts_id: Optional[int] = None
+    text: Optional[str] = None
+    budget_type: Optional[BudgetOption] = None
+
+
+@mcp.tool()
+def update_entrygroup(
+    time_since: str,
+    time_until: str,
+    users_id: Optional[int] = None,
+    customers_id: Optional[int] = None,
+    projects_id: Optional[int] = None,
+    subprojects_id: Optional[int] = None,
+    services_id: Optional[int] = None,
+    lumpsum_services_id: Optional[int] = None,
+    billable: Optional[BillableDistinct] = None,
+    text: Optional[str] = None,
+    hourly_rate: Optional[float] = None,
+    confirm_key: Optional[str] = None,
+    filter: Optional[EntryGroupFilter] = None
+) -> dict:
+    """
+    Update entry groups in Clockodo MCP (bulk update).
+    Update multiple entry groups at once, based on a time range and optional filters (user, project, billable status, etc.).
+    Common use: Change properties (e.g., billable status, text, hourly rate) for all entries matching the filter and time range.
+    time in format date-time, example: "2023-02-28T12:00:00Z"
+    billable: 0=Non-billable, 1=Billable, 2=Billed
+    confirmation_key: For safety, the api will respond with a confirmation key with which you have to request once again in order to confirm your edit action.
+    """
+    payload = {
+        "time_since": time_since,
+        "time_until": time_until
+    }
+    if users_id is not None:
+        payload["users_id"] = users_id
+    if customers_id is not None:
+        payload["customers_id"] = customers_id
+    if projects_id is not None:
+        payload["projects_id"] = projects_id
+    if subprojects_id is not None:
+        payload["subprojects_id"] = subprojects_id
+    if services_id is not None:
+        payload["services_id"] = services_id
+    if lumpsum_services_id is not None:
+        payload["lumpsum_services_id"] = lumpsum_services_id
+    if billable is not None:
+        payload["billable"] = billable.value
+    if text is not None:
+        payload["text"] = text
+    if hourly_rate is not None:
+        payload["hourly_rate"] = hourly_rate
+    if confirm_key is not None:
+        payload["confirm_key"] = confirm_key
+    if filter is not None:
+        payload["filter"] = flatten_dict(filter.model_dump())
+    endpoint = noid_endpoint_map.get(Service.entrygroups)
+    resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+@mcp.tool()
+def create_or_update_holiday_quota(
+    users_id: Optional[int] = None,
+    year_since: Optional[int] = None,
+    year_until: Optional[int] = None,
+    count: Optional[float] = None,
+    note: Optional[str] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update a holiday quota in Clockodo MCP.
+    If id is provided, updates the quota
+    If id is not provided, creates a new quota
+    year is of form YYYY, example: 2023
+    """
+    payload = {}
+    if users_id is not None:
+        payload["users_id"] = users_id
+    if year_since is not None:
+        payload["year_since"] = year_since
+    if year_until is not None:
+        payload["year_until"] = year_until
+    if count is not None:
+        payload["count"] = count
+    if note is not None:
+        payload["note"] = note
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.holidaysquota).format(id=id)
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.holidaysquota)
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
