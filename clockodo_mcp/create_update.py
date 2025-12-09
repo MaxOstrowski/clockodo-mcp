@@ -1,10 +1,11 @@
+from pydantic import BaseModel
 from enum import Enum
 from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, NonbusinessDayType, TargetHourType
+from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, GeneralAccessV2, NonbusinessDayType, TargetHourType
 from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
-from typing import Optional
+from typing import Optional, Union
 
 @mcp.tool()
 def create_targethour(
@@ -614,5 +615,64 @@ def create_or_update_nonbusiness_group(
     else:
         payload["id"] = id
         endpoint = noid_endpoint_map.get(Service.nonbusinessgroups)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+class CustomerProjectsAccess(BaseModel):
+    projects: dict[str, bool]
+
+
+@mcp.tool()
+def create_or_update_customer_projects_access(
+        users_id: int,
+        access: dict[str, Union[bool, CustomerProjectsAccess]],
+    ) -> dict:
+    """
+    Create or update customer-projects access for a user.
+    access: Dict mapping customer IDs to either True (full access) or a dict with 'projects' mapping project IDs to True.
+    Examples:
+        access = {
+            "123": True,  # Full access to customer 123
+            "456": CustomerProjectsAccess(projects={"789": True, "101": True})  # Access to projects 789 and 101 of customer 456
+        }
+    If id is provided, updates the access. If not, creates new access.
+    """
+    payload = {}
+    for name, access in access.items():
+        if isinstance(access, bool):
+            payload[name] = access
+        elif isinstance(access, CustomerProjectsAccess):
+            payload[name]  = flatten_dict(access.model_dump())
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.users_access_customers_projects).format(id=users_id)
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = id_endpoint_map.get(Service.users_access_customers_projects).format(id=users_id)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+
+@mcp.tool()
+def create_or_update_service_access(
+    users_id: int,
+    add: Union[bool, dict[str, bool]],
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update service access for a user.
+    add: True for general access, or a dict mapping service IDs to True for specific access.
+    Examples:
+        add = True  # Full access to all services
+        add = {"123": True, "456": True}  # Access to services 123 and 456 only
+    If id is provided, updates the access. If not, creates new access.
+    """
+    payload = {"add": add}
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.users_access_services).format(id=users_id)
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = id_endpoint_map.get(Service.users_access_services).format(id=users_id)
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
