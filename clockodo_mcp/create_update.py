@@ -1,6 +1,7 @@
+from enum import Enum
 from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, TargetHourType
+from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, TargetHourType
 from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
 from typing import Optional
@@ -499,4 +500,49 @@ def create_or_update_holiday_quota(
     else:
         endpoint = noid_endpoint_map.get(Service.holidaysquota)
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+@mcp.tool()
+def clear_individual_user_access(users_id: int) -> dict:
+    """
+    Clear all individual user access for the specified user.
+    """
+    endpoint = id_endpoint_map.get(Service.individualuseraccess_users_clear).format(id=users_id)
+    resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS)
+    return resp.json()
+
+
+class IndividualUserAccessType(Enum):
+    PROJECT = "project"
+    SERVICE = "service"
+    SERVICE_GENERAL = "service_general"
+
+
+@mcp.tool()
+def update_individual_user_access(
+    access_type: IndividualUserAccessType,
+    users_id: int,
+    type: AccessType,
+    value: AccessValue,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Update individual user access for a project, service, or general service.
+    users_id (int): User ID
+    id (int, optional): Project or Service ID (not required for service_general)
+    type: only add allowed for service and service_general
+    """
+    payload = {"value": value.value}
+    if access_type == IndividualUserAccessType.PROJECT:
+        endpoint = id_endpoint_map.get(Service.individualuseraccess_users_projects).format(id=users_id)
+        payload = {"id": id}
+    elif access_type == IndividualUserAccessType.SERVICE:
+        endpoint = id_endpoint_map.get(Service.individualuseraccess_users_services).format(id=users_id)
+        payload = {"id": id}
+    elif access_type == IndividualUserAccessType.SERVICE_GENERAL:
+        endpoint = id_endpoint_map.get(Service.individualuseraccess_users_services_general).format(id=users_id)
+    else:
+        raise ValueError("Invalid access_type")
+    resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
