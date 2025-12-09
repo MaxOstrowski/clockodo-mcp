@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from enum import Enum
 from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, GeneralAccessV2, NonbusinessDayType, TargetHourType
+from clockodo_mcp.models import AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, CustomerColor, GeneralAccessV2, NonbusinessDayType, TargetHourType
 from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
 from typing import Optional, Union
@@ -674,5 +674,65 @@ def create_or_update_service_access(
         resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     else:
         endpoint = id_endpoint_map.get(Service.users_access_services).format(id=users_id)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
+from typing import Any
+
+
+@mcp.tool()
+def create_or_update_customer(
+    name: str,
+    number: Optional[str] = None,
+    active: Optional[bool] = None,
+    billable_default: Optional[bool] = None,
+    note: Optional[str] = None,
+    color: Optional[CustomerColor] = None,
+    bill_service_id: Optional[str] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update a customer (v3).
+    If id is provided, updates the customer (PUT /v3/customers/{id}), else creates a new customer (POST /v3/customers).
+    Fields:
+      name: Customer name (required for create, max 100)
+      number: Freely selectable number (max 50)
+      active: Is customer active
+      billable_default: Default billable
+      note: Note (max 1000), Can only be set by owners or workers with elevated access `manage_customers_and_projects`
+      color: Possible values:
+              - `1`: BloodOrange
+              - `2`: Sunflower
+              - `3`: LightGreen
+              - `4`: Caribbean
+              - `5`: Sky
+              - `6`: BrandBlue
+              - `7`: BluePurple
+              - `8`: Magenta
+              - `9`: ChewingGum
+      bill_service_id: Billing service id (max 50), Can only be set by owners or workers with elevated access `manage_customers_and_projects` and if a billing application with customers support is linked up
+      id: Customer id for update, none for create
+    """
+    payload = {}
+    if name is not None:
+        payload["name"] = name
+    if number is not None:
+        payload["number"] = number
+    if active is not None:
+        payload["active"] = active
+    if billable_default is not None:
+        payload["billable_default"] = billable_default
+    if note is not None:
+        payload["note"] = note
+    if color is not None:
+        payload["color"] = color.value
+    if bill_service_id is not None:
+        payload["bill_service_id"] = bill_service_id
+    if id is not None:
+        endpoint = f"/v3/customers/{id}"
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = "/v3/customers"
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
