@@ -809,3 +809,39 @@ def create_or_update_overtimecarry(
     return resp.json()
 
 
+@mcp.tool()
+def create_or_update_overtimereduction(
+    users_id: Optional[int] = None,
+    date: str = None,
+    hours: float = None,
+    note: Optional[str] = None,
+    id: Optional[int] = None
+) -> dict:
+    """
+    Create or update an overtime reduction record (v3).
+    If id is provided, updates the record (PUT /v3/overtimeReductions/{id}), else creates a new record (POST /v3/overtimeReductions).
+    Fields:
+        users_id (int): User ID (required for create)
+        date (str): Date of reduction (YYYY-MM-DD, required for create/update)
+        hours (float): Amount of hours reduced (required for create/update, -999 to 999)
+        note (str, optional): Note (max 1000)
+        id (int, optional): Record id for update
+    """
+    payload = {}
+    if users_id is not None:
+        payload["users_id"] = users_id
+    if date is not None:
+        payload["date"] = date
+    if hours is not None:
+        payload["hours"] = hours
+    if note is not None:
+        payload["note"] = note
+    if id is not None:
+        endpoint = id_endpoint_map.get(Service.overtimereductions).format(id=id)
+        resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    else:
+        endpoint = noid_endpoint_map.get(Service.overtimereductions)
+        resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
+    return resp.json()
+
+
