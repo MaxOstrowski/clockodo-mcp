@@ -280,8 +280,8 @@ def get_customers_count_projects(
 
 @mcp.tool()
 def get_entries_texts(
+    mode: EntryTextMode,
     term: Optional[str] = None,
-    mode: Optional[EntryTextMode] = None,
     items: Optional[int] = None,
     filter: Optional[EntriesTextFilter] = None
 ) -> dict:
