@@ -80,5 +80,10 @@ def delete_entrygroup(id: int,
     if start_new is not None:
         params["start_new"] = str(start_new).lower()
 
-    resp = requests.request("DELETE", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
-    return resp.json()
+    req = requests.Request(
+        "DELETE",
+        url=BASE_URL + endpoint,
+        headers=AUTH_HEADERS,
+        params=flatten_dict(params)
+    ).prepare()
+    return {"url": req.url, "method": "DELETE", "headers": dict(req.headers)}
