@@ -1,11 +1,11 @@
-
-
 from enum import Enum
 from typing import Optional
 
+from pydantic import BaseModel
 import requests
 
-from clockodo_mcp.utils import Service, flatten_dict, id_endpoint_map
+from clockodo_mcp.models import BillableDistinct, BudgetOption
+from clockodo_mcp.utils import Service, flatten_dict, id_endpoint_map, noid_endpoint_map
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
 
 
@@ -53,37 +53,43 @@ def delete(service: ServiceDeleteSingleId, id: int, dry_run: Optional[bool], for
     return resp.json()
 
 
-@mcp.tool()
-def delete_entrygroup(id: int,
-                      away: Optional[int] = None,
-                      time_until: Optional[str] = None,
-                      users_id: Optional[int] = None,
-                      start_new: Optional[bool] = None) -> dict:
-    """ Delete entry group by ID.
+class DeleteEntrygroupV2Filter(BaseModel):
+    users_id: Optional[int]
+    teams_id: Optional[int]
+    customers_id: Optional[int]
+    projects_id: Optional[int]
+    subprojects_id: Optional[int]
+    services_id: Optional[int]
+    lumpsum_services_id: Optional[int]
+    billable: Optional[BillableDistinct] = None
+    texts_id: Optional[int]
+    text: Optional[str] = None
+    budget_type: Optional[BudgetOption] = None
 
-    away: User ID to set as away user after deleting the entry group.
-    time_until: Date-time string until which the away status should be set, example: '2023-02-28T12:00:00Z'.
-    users_id: User ID for whom the entry group should be deleted.
-    start_new: Whether to start a new clock entry after deleting the entry group. 
-    """
-    endpoint_template = id_endpoint_map.get(Service.entrygroups)
-    if not endpoint_template:
-        raise ValueError(f"No endpoint mapping found for service: {Service.entrygroups.value}")
-    endpoint = endpoint_template.format(id=id)
-    params = {}
-    if away is not None:
-        params["away"] = str(away).lower()
-    if time_until is not None:
-        params["time_until"] = time_until
-    if users_id is not None:
-        params["users_id"] = users_id
-    if start_new is not None:
-        params["start_new"] = str(start_new).lower()
+def delete_entrygroup(
+        time_since: str,
+        time_until: str,
+        confirm_key: Optional[str] = None,
+        filter: Optional[DeleteEntrygroupV2Filter] = None
+    ) -> dict:
+        """Delete entry groups by filter and time range
 
-    req = requests.Request(
-        "DELETE",
-        url=BASE_URL + endpoint,
-        headers=AUTH_HEADERS,
-        params=flatten_dict(params)
-    ).prepare()
-    return {"url": req.url, "method": "DELETE", "headers": dict(req.headers)}
+        time_since: Start of the time range (ISO 8601 string, required)
+        time_until: End of the time range (ISO 8601 string, required)
+        confirm_key: Optional confirmation key
+        filter: Optional
+        """
+        endpoint_template = noid_endpoint_map.get(Service.entrygroups)
+        params = {
+            "time_since": time_since,
+            "time_until": time_until,
+        }
+        if confirm_key is not None:
+            params["confirm_key"] = confirm_key
+        if filter is not None:
+            filter_dict = filter.model_dump(exclude_none=True)
+            params["filter"] = flatten_dict(filter_dict, parent_key="filter")
+            
+        resp = requests.request("DELETE", url=BASE_URL + endpoint_template, headers=AUTH_HEADERS, params=flatten_dict(params)
+        )
+        return resp.json()

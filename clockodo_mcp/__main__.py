@@ -23,3 +23,5 @@ if __name__ == "__main__":
 # write better comments what functions actually do and represent
 # make a release
 #write a mcp server description
+
+# search for all delete endpoints again
