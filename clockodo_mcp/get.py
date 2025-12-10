@@ -71,7 +71,7 @@ class ServiceGetById(Enum):
 @mcp.tool()
 def get(id: int, service: ServiceGetById) -> dict:
     """ Get entity by ID """
-    endpoint_template = id_endpoint_map.get(service)
+    endpoint_template = id_endpoint_map.get(service.value)
     if not endpoint_template:
         raise ValueError(f"No endpoint mapping found for service: {service.value}")
     endpoint = endpoint_template.format(id=id)
