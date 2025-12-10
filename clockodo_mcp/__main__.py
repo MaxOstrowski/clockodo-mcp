@@ -17,4 +17,3 @@ if __name__ == "__main__":
 
 
 #we have update_entry_group but not create ?
-#get("targethours") fails as no endpoint found

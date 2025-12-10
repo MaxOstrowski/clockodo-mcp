@@ -3,10 +3,11 @@
 from enum import Enum
 from typing import Optional
 
+from pydantic import BaseModel
 import requests
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, mcp, BASE_URL
 
-from clockodo_mcp.models import ChangeRequestStatus, UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
+from clockodo_mcp.models import BillableDistinct, BudgetOption, ChangeRequestStatus, Grouping, UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
 from clockodo_mcp.utils import TeamsFilter, AbsencesFilter, ApiProjectsReports_SortForIndex, ApiUsersV3_SortForIndex, CustomerFilter, EntriesTextFilter, LumpSumServicesFilter, ProjectsFilter, ProjectsReportsFilter, Service, ServicesFilter, SubprojectsFilter, UsersFilter, UsersNonbusinessGroupsFilter, flatten_dict, id_endpoint_map, noid_endpoint_map
 
 
@@ -17,7 +18,6 @@ class ServicGetList(Enum):
     accessgroups = Service.accessgroups.value
     clock = Service.clock.value
     entries = Service.entries.value
-    entrygroups = Service.entrygroups.value
     holidaysquota = Service.holidaysquota.value
     nonbusinessdays = Service.nonbusinessdays.value
     nonbusinessgroups = Service.nonbusinessgroups.value
@@ -50,7 +50,6 @@ class ServiceGetById(Enum):
     targethours = Service.targethours.value
     accessgroups = Service.accessgroups.value
     entries = Service.entries.value
-    entrygroups = Service.entrygroups.value
     holidaysquota = Service.holidaysquota.value
     nonbusinessdays = Service.nonbusinessdays.value
     nonbusinessgroups = Service.nonbusinessgroups.value
@@ -79,6 +78,67 @@ def get(id: int, service: ServiceGetById) -> dict:
     return resp.json()
 
 # manually written get functions for services with special parameters
+
+
+class EntryGroupsFilter(BaseModel):
+    """
+
+    billable:
+        NotBillable = 0
+        Billable = 1
+        Billed = 2
+
+    """
+    users_id: Optional[int] = None
+    teams_id: Optional[int] = None
+    customers_id: Optional[int] = None
+    projects_id: Optional[int] = None
+    subprojects_id: Optional[int] = None
+    services_id: Optional[int] = None
+    lumpsum_services_id: Optional[int] = None
+    billable: Optional[BillableDistinct] = None  # Could be an enum if BillableDistinct is defined
+    texts_id: Optional[int] = None
+    text: Optional[str] = None
+    budget_type: Optional[BudgetOption] = None  # Could be an enum if BudgetOption is defined
+
+
+@mcp.tool()
+def get_entrygroups(
+    time_since: str,
+    time_until: str,
+    grouping: list[Grouping],
+    round_to_minutes: Optional[int] = None,
+    prepend_customer_to_project_name: Optional[bool] = None,
+    calc_also_revenues_for_projects_with_hard_budget: Optional[bool] = None,
+    filter: Optional[EntryGroupsFilter] = None
+) -> dict:
+    """
+    Get entry groups (aggregated time entries) for a given time range and grouping.
+    Parameters:
+        time_since: Start datetime, Example: 2023-02-28T12:00:00Z
+        time_until: End datetime, Example: 2023-03-28T12:00:00Z
+        grouping: List of grouping criteria
+        round_to_minutes: Rounding
+        prepend_customer_to_project_name
+        calc_also_revenues_for_projects_with_hard_budget
+        filter (dict, optional): Filtering options
+    """
+    params = {
+        "time_since": time_since,
+        "time_until": time_until,
+        "grouping": [group.value for group in grouping],
+    }
+    if round_to_minutes is not None:
+        params["round_to_minutes"] = round_to_minutes
+    if prepend_customer_to_project_name is not None:
+        params["prepend_customer_to_project_name"] = prepend_customer_to_project_name
+    if calc_also_revenues_for_projects_with_hard_budget is not None:
+        params["calc_also_revenues_for_projects_with_hard_budget"] = calc_also_revenues_for_projects_with_hard_budget
+    if filter is not None:
+        params["filter"] = flatten_dict(filter.model_dump(exclude_none=True))
+    endpoint = noid_endpoint_map.get(Service.entrygroups)
+    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=params)
+    return resp.json()
 
 
 @mcp.tool("restricted")

@@ -164,7 +164,7 @@ def create_worktimeschangerequest(
         time_until (str): End time (ISO 8601). Example: "2023-02-28T12:00:00Z"
 
 	"""
-	changes_flat = [flatten_dict(c.model_dump()) for c in changes]
+	changes_flat = [flatten_dict(c.model_dump(exclude_none=True)) for c in changes]
 	payload = {
 		"date": date,
 		"users_id": users_id,
@@ -463,7 +463,7 @@ def update_entrygroup(
     if confirm_key is not None:
         payload["confirm_key"] = confirm_key
     if filter is not None:
-        payload["filter"] = flatten_dict(filter.model_dump())
+        payload["filter"] = flatten_dict(filter.model_dump(exclude_none=True))
     endpoint = noid_endpoint_map.get(Service.entrygroups)
     resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
@@ -643,7 +643,7 @@ def create_or_update_customer_projects_access(
         if isinstance(access, bool):
             payload[name] = access
         elif isinstance(access, CustomerProjectsAccess):
-            payload[name]  = flatten_dict(access.model_dump())
+            payload[name]  = flatten_dict(access.model_dump(exclude_none=True))
     if users_id is not None:
         endpoint = id_endpoint_map.get(Service.users_access_customers_projects).format(id=users_id)
         resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
@@ -920,7 +920,7 @@ def create_or_update_subproject(
     if billable_default is not None:
         payload["billable_default"] = billable_default
     if budget is not None:
-        payload["budget"] = flatten_dict(budget.model_dump())
+        payload["budget"] = flatten_dict(budget.model_dump(exclude_none=True))
     if number is not None:
         payload["number"] = number
     if note is not None:
@@ -991,7 +991,7 @@ def create_or_update_project(
     if start_date is not None:
         payload["start_date"] = start_date
     if budget is not None:
-        payload["budget"] = flatten_dict(budget.model_dump())
+        payload["budget"] = flatten_dict(budget.model_dump(exclude_none=True))
     if bill_service_id is not None:
         payload["bill_service_id"] = bill_service_id
     if id is not None:
