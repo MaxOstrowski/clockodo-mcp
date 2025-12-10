@@ -8,7 +8,7 @@ import requests
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, mcp, BASE_URL
 
 from clockodo_mcp.models import BillableDistinct, BudgetOption, ChangeRequestStatus, Grouping, UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
-from clockodo_mcp.utils import TeamsFilter, AbsencesFilter, ApiProjectsReports_SortForIndex, ApiUsersV3_SortForIndex, CustomerFilter, EntriesTextFilter, LumpSumServicesFilter, ProjectsFilter, ProjectsReportsFilter, Service, ServicesFilter, SubprojectsFilter, UsersFilter, UsersNonbusinessGroupsFilter, flatten_dict, id_endpoint_map, noid_endpoint_map
+from clockodo_mcp.utils import TeamsFilter, AbsencesFilter, ApiProjectsReports_SortForIndex, ApiUsersV3_SortForIndex, CustomerFilter, EntriesTextFilter, LumpSumServicesFilter, ProjectsFilter, ProjectsReportsFilter, Service, ServicesFilter, SubprojectsFilter, UsersFilter, UsersNonbusinessGroupsFilter, flatten_dict, flatten_list, id_endpoint_map, noid_endpoint_map
 
 
 
@@ -123,6 +123,7 @@ def get_entrygroups(
         calc_also_revenues_for_projects_with_hard_budget
         filter (dict, optional): Filtering options
     """
+    # Build params as a dict, flatten at the end for requests
     params = {
         "time_since": time_since,
         "time_until": time_until,
@@ -135,9 +136,9 @@ def get_entrygroups(
     if calc_also_revenues_for_projects_with_hard_budget is not None:
         params["calc_also_revenues_for_projects_with_hard_budget"] = calc_also_revenues_for_projects_with_hard_budget
     if filter is not None:
-        params["filter"] = flatten_dict(filter.model_dump(exclude_none=True))
+        params["filter"] = filter.model_dump(exclude_none=True)
     endpoint = noid_endpoint_map.get(Service.entrygroups)
-    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -168,7 +169,7 @@ def get_worktimeschangerequests(
     if teams_id is not None:
         params["teams_id"] = teams_id
     endpoint = noid_endpoint_map.get(Service.worktimeschangerequest)
-    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -179,7 +180,12 @@ def get_userreports(id: int, year: int, type: Optional[UserReportType]) -> dict:
     """
     endpoint_template = id_endpoint_map.get(Service.userreports)
     endpoint = endpoint_template.format(id=id)
-    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params={"year": year, "type": type.value})
+    params = {
+        "year": year,
+    }
+    if type is not None:
+        params["type"] = type.value
+    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -193,7 +199,7 @@ def get_nonbusinessdays(id: int, year: Optional[int]) -> dict:
     params = {}
     if year is not None:
         params["year"] = year
-    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -208,7 +214,7 @@ def get_users(id: int, scope: Optional[UserScope]) -> dict:
     params = {}
     if scope is not None:
         params["scope"] = scope.value
-    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -220,7 +226,12 @@ def get_worktimes(users_id: int, date_since: str, date_until: str) -> dict:
     example date: '2023-01-01'
     """
     endpoint = noid_endpoint_map.get(Service.worktimes)
-    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params={"users_id": users_id, "date_since": date_since, "date_until": date_until})
+    params = {
+        "users_id": users_id,
+        "date_since": date_since,
+        "date_until": date_until
+    }
+    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -237,17 +248,16 @@ def get_customers(
     """
     params = {}
     if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict, parent_key='filter'))
+        params['filter'] = filter
     if sort is not None:
-        params['sort'] = [s.value for s in sort]
+        params['sort'] = sort
     if scope is not None:
         params['scope'] = scope.value
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.customers], headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.customers], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -263,8 +273,8 @@ def get_customers_count_projects(
     if customers_id is not None:
         params['customers_id'] = customers_id
     if scope is not None:
-        params['scope'] = scope.value
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.customers_count_projects], headers=AUTH_HEADERS, params=params)
+        params['scope'] = scope
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.customers_count_projects], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -282,13 +292,12 @@ def get_entries_texts(
     if term is not None:
         params['term'] = term
     if mode is not None:
-        params['mode'] = mode.value
+        params['mode'] = mode
     if items is not None:
         params['items'] = items
     if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict, parent_key='filter'))
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.entries_texts], headers=AUTH_HEADERS, params=params)
+        params['filter'] = filter
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.entries_texts], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -302,7 +311,7 @@ def get_holidayscarry(year: Optional[int] = None, users_id: Optional[int] = None
         params['year'] = year
     if users_id is not None:
         params['users_id'] = users_id
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.holidayscarry], headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.holidayscarry], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -316,7 +325,7 @@ def get_overtimecarry(year: Optional[int] = None, users_id: Optional[int] = None
         params['year'] = year
     if users_id is not None:
         params['users_id'] = users_id
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.overtimecarry], headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.overtimecarry], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -328,7 +337,7 @@ def get_overtimereductions(users_id: Optional[list] = None) -> dict:
     params = {}
     if users_id is not None:
         params['users_id'] = users_id
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.overtimereductions], headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.overtimereductions], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -344,15 +353,14 @@ def get_projects_reports(
     """
     params = {}
     if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict, parent_key='filter'))
+        params['filter'] = filter
     if sort is not None:
-        params['sort'] = [s.value for s in sort]
+        params['sort'] = sort
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.projects_reports], headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.projects_reports], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -368,15 +376,14 @@ def get_subprojects(
     """
     params = {}
     if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict, parent_key='filter'))
+        params['filter'] = filter
     if sort is not None:
-        params['sort'] = sort.value
+        params['sort'] = sort
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.subprojects], headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.subprojects], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -393,17 +400,16 @@ def get_teams(
     """
     params = {}
     if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict, parent_key='filter'))
+        params['filter'] = filter
     if scope is not None:
         params['scope'] = scope.value
     if sort is not None:
-        params['sort'] = [s.value for s in sort]
+        params['sort'] = sort
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.teams], headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.teams], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
     
@@ -420,25 +426,17 @@ def get_users_all(
     """
     params = {}
     if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict, parent_key='filter'))
+        params['filter'] = filter
     if scope is not None:
         params['scope'] = scope.value
     if sort is not None:
-        params['sort'] = [s.value for s in sort]
+        params['sort'] = sort
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
     # Build the request object to get the final URL
-    req = requests.Request(
-        "GET",
-        url=BASE_URL + noid_endpoint_map[Service.users],
-        headers=AUTH_HEADERS,
-        params=params
-    )
-    prepped = req.prepare()
-    resp = requests.Session().send(prepped)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.users], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -453,13 +451,12 @@ def get_users_nonbusinessgroups(
     """
     params = {}
     if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict, parent_key='filter'))
+        params['filter'] = filter
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.usersnonbusinessgroups], headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.usersnonbusinessgroups], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -473,11 +470,10 @@ def get_absences(
     """
     params = {}
     if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict))
+        params['filter'] = filter
     if scope is not None:
-        params['scope'] = scope.value
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.absences], headers=AUTH_HEADERS, params=params)
+        params['scope'] = scope
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.absences], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -493,15 +489,14 @@ def get_lumpsumservices(
     """
     params = {}
     if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict, parent_key='filter'))
+        params['filter'] = filter
     if sort is not None:
-        params['sort'] = [s.value for s in sort]
+        params['sort'] = sort
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.lumpsumservices], headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.lumpsumservices], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -518,17 +513,16 @@ def get_projects(
     """
     params = {}
     if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict, parent_key='filter'))
+        params['filter'] = filter
     if sort is not None:
-        params['sort'] = [s.value for s in sort]
+        params['sort'] = sort
     if scope is not None:
-        params['scope'] = scope.value
+        params['scope'] = scope
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.projects], headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.projects], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -545,15 +539,14 @@ def get_services(
     """
     params = {}
     if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict, parent_key='filter'))
+        params['filter'] = filter
     if sort is not None:
-        params['sort'] = [s.value for s in sort]
+        params['sort'] = sort
     if scope is not None:
-        params['scope'] = scope.value
+        params['scope'] = scope
     if page is not None:
         params['page'] = page
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.services], headers=AUTH_HEADERS, params=params)
+    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.services], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()

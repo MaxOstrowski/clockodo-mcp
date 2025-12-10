@@ -5,7 +5,7 @@ from typing import Optional
 
 import requests
 
-from clockodo_mcp.utils import Service, id_endpoint_map
+from clockodo_mcp.utils import Service, flatten_dict, id_endpoint_map
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
 
 
@@ -49,7 +49,7 @@ def delete(service: ServiceDeleteSingleId, id: int, dry_run: Optional[bool], for
     if force is not None:
         params["force"] = str(force).lower()
 
-    resp = requests.request("DELETE", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("DELETE", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
 
@@ -80,5 +80,5 @@ def delete_entrygroup(id: int,
     if start_new is not None:
         params["start_new"] = str(start_new).lower()
 
-    resp = requests.request("DELETE", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=params)
+    resp = requests.request("DELETE", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()

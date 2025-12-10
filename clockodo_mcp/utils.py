@@ -215,30 +215,57 @@ class AbsencesFilter(BaseModel):
 
 
 
-def flatten_dict(d: dict, parent_key: str =''):
+
+
+def flatten_list(key: str, values: list) -> list[tuple[str, str]]:
     """
-    Recursively flattens a dictionary for query parameters using bracket notation, e.g. filter[active]=True.
+    Recursively flattens a list for query parameters using bracket notation, e.g. grouping[]=a&grouping[]=b.
+    Handles lists of dicts, lists of lists, enums, Pydantic models, and basic types.
+    Returns a list of (key, value) tuples.
     """
+    items = []
+    for v in values:
+        if isinstance(v, BaseModel):
+            # Dump model to dict and recurse
+            items.extend(flatten_dict(v.model_dump(exclude_none=True), key))
+        elif isinstance(v, dict):
+            items.extend(flatten_dict(v, key))
+        elif isinstance(v, list):
+            items.extend(flatten_list(key, v))
+        elif isinstance(v, bool):
+            items.append((f"{key}[]", str(v).lower()))
+        elif isinstance(v, Enum):
+            items.append((f"{key}[]", v.value))
+        else:
+            items.append((f"{key}[]", str(v)))
+    return items
+
+
+
+
+
+def flatten_dict(d, parent_key: str = '') -> list[tuple[str, str]]:
+    """
+    Recursively flattens a dictionary or Pydantic model for query parameters using bracket notation, e.g. filter[active]=True.
+    Returns a list of (key, value) tuples.
+    """
+    # If d is a Pydantic model, dump to dict first
+    if isinstance(d, BaseModel):
+        d = d.model_dump(exclude_none=True)
     items = []
     for k, v in d.items():
         new_key = f"{parent_key}[{k}]" if parent_key else k
-        if isinstance(v, dict):
-            items.extend(flatten_dict(v, new_key).items())
+        if isinstance(v, BaseModel):
+            items.extend(flatten_dict(v, new_key))
+        elif isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key))
         elif isinstance(v, list):
-            for item in v:
-                if isinstance(item, dict):
-                    items.extend(flatten_dict(item, new_key).items())
-                elif isinstance(item, bool):
-                    items.append((new_key, str(item).lower()))
-                elif isinstance(item, Enum):
-                    items.append((new_key, item.value))
-                else:
-                    items.append((new_key, item))
+            items.extend(flatten_list(new_key, v))
         elif isinstance(v, bool):
             items.append((new_key, str(v).lower()))
         elif isinstance(v, Enum):
             items.append((new_key, v.value))
         else:
             items.append((new_key, v))
-    return dict(items)
+    return items
 
