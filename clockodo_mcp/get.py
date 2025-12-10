@@ -38,7 +38,7 @@ class ServicGetList(Enum):
 @mcp.tool()
 def get_all(service: ServicGetList) -> dict:
     """ Get all entities for a given service """
-    endpoint = noid_endpoint_map.get(service)
+    endpoint = noid_endpoint_map.get(Service(service.value))
     if not endpoint:
         raise ValueError(f"No endpoint mapping found for service: {service.value}")
     resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS)
