@@ -81,7 +81,7 @@ def get(id: int, service: ServiceGetById) -> dict:
 # manually written get functions for services with special parameters
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def get_worktimeschangerequests(
     date_since: Optional[str] = None,
     date_until: Optional[str] = None,
@@ -191,7 +191,7 @@ def get_customers(
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def get_customers_count_projects(
     customers_id: Optional[list[int]] = None,
     scope: Optional[CustomerProjectScope] = None
@@ -246,7 +246,7 @@ def get_holidayscarry(year: Optional[int] = None, users_id: Optional[int] = None
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def get_overtimecarry(year: Optional[int] = None, users_id: Optional[int] = None) -> dict:
     """
     Get overtime carry data.
@@ -260,7 +260,7 @@ def get_overtimecarry(year: Optional[int] = None, users_id: Optional[int] = None
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def get_overtimereductions(users_id: Optional[list] = None) -> dict:
     """
     Get overtime reductions.
@@ -382,7 +382,7 @@ def get_users_all(
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def get_users_nonbusinessgroups(
     filter: Optional[UsersNonbusinessGroupsFilter] = None,
     page: Optional[int] = None,
@@ -421,7 +421,7 @@ def get_absences(
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def get_lumpsumservices(
     filter: Optional[LumpSumServicesFilter] = None,
     sort: Optional[list[SortIdNameActive]] = None,
@@ -469,31 +469,6 @@ def get_projects(
     if items_per_page is not None:
         params['items_per_page'] = items_per_page
     resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.projects], headers=AUTH_HEADERS, params=params)
-    return resp.json()
-
-
-
-@mcp.tool()
-def get_projects_reports_v4(
-    filter: Optional[ProjectsReportsFilter] = None,
-    sort: Optional[list[ApiProjectsReports_SortForIndex]] = None,
-    page: Optional[int] = None,
-    items_per_page: Optional[int] = None
-) -> dict:
-    """
-    Get v4 project reports with optional filtering, sorting, and paging.
-    """
-    params = {}
-    if filter is not None:
-        filter_dict = filter.model_dump(exclude_none=True)
-        params.update(flatten_dict(filter_dict, parent_key='filter'))
-    if sort is not None:
-        params['sort'] = [s.value for s in sort]
-    if page is not None:
-        params['page'] = page
-    if items_per_page is not None:
-        params['items_per_page'] = items_per_page
-    resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.projects_reports], headers=AUTH_HEADERS, params=params)
     return resp.json()
 
 

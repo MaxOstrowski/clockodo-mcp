@@ -146,7 +146,7 @@ class WorkTimesChangeRequestChange(BaseModel):
 	time_until: str  # ISO 8601 datetime string
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def create_worktimeschangerequest(
 	date: str,
 	users_id: int,
@@ -271,7 +271,7 @@ def create_accessgroup(
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def create_clock(
     customers_id: int,
     services_id: int,
@@ -318,7 +318,7 @@ def create_clock(
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def update_clock(
     id: int,
     time_since: Optional[str] = None,
@@ -594,7 +594,7 @@ def create_or_update_nonbusiness_day(
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def create_or_update_nonbusiness_group(
     name: str,
     company_default: bool,
@@ -738,7 +738,7 @@ def create_or_update_customer(
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def create_or_update_holidayscarry(
     year: int,
     count: float,
@@ -773,7 +773,7 @@ def create_or_update_holidayscarry(
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def create_or_update_overtimecarry(
     year: int,
     count: float,
@@ -809,7 +809,7 @@ def create_or_update_overtimecarry(
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def create_or_update_overtimereduction(
     users_id: Optional[int] = None,
     date: str = None,
@@ -1031,7 +1031,7 @@ def create_or_update_team(
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def create_or_update_usersnonbusinessgroup(
     users_id: int,
     nonbusiness_groups_id: int,
@@ -1130,7 +1130,7 @@ def create_or_update_absence(
     return response.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def create_or_update_lumpsumservice(
     name: Optional[str] = None,
     price: Optional[float] = None,
