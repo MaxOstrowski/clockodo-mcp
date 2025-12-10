@@ -30,3 +30,13 @@ datamodel-codegen is used and some enums lose their names (CustomerColor), bugre
 
 
 I do not yet know how to use the changeRequests to delete or change an entry
+
+
+
+for get_subproject the sort parameter might be broken:
+
+curl -X GET -H "X-ClockodoApiUser: $CLOCKODO_API_USER" -H "X-ClockodoApiKey: $CLOCKODO_API_KEY" -H "X-Clockodo-External-Application: $CLOCKODO_EXTERNAL_APP" "https://my.clockodo.com/api/v3/subprojects?sort=id
+
+does not work while all other endpoints need a list of sortings as parameters and work like
+
+curl -X GET -H "X-ClockodoApiUser: $CLOCKODO_API_USER" -H "X-ClockodoApiKey: $CLOCKODO_API_KEY" -H "X-Clockodo-External-Application: $CLOCKODO_EXTERNAL_APP" "https://my.clockodo.com/api/v3/customers?sort=id"

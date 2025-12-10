@@ -7,7 +7,7 @@ from pydantic import BaseModel
 import requests
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, mcp, BASE_URL
 
-from clockodo_mcp.models import BillableDistinct, BudgetOption, ChangeRequestStatus, Grouping, UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
+from clockodo_mcp.models import AbsenceScope, BillableDistinct, BudgetOption, ChangeRequestStatus, Grouping, UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
 from clockodo_mcp.utils import TeamsFilter, AbsencesFilter, ApiProjectsReports_SortForIndex, ApiUsersV3_SortForIndex, CustomerFilter, EntriesTextFilter, LumpSumServicesFilter, ProjectsFilter, ProjectsReportsFilter, Service, ServicesFilter, SubprojectsFilter, UsersFilter, UsersNonbusinessGroupsFilter, flatten_dict, flatten_list, id_endpoint_map, noid_endpoint_map
 
 
@@ -373,6 +373,7 @@ def get_subprojects(
 ) -> dict:
     """
     Get subprojects with optional filtering, sorting, and paging.
+    sort parameter might be broken?
     """
     params = {}
     if filter is not None:
@@ -463,7 +464,7 @@ def get_users_nonbusinessgroups(
 @mcp.tool()
 def get_absences(
     filter: Optional[AbsencesFilter] = None,
-    scope: Optional[str] = None  # AbsenceScope, not imported here
+    scope: Optional[AbsenceScope] = None
 ) -> dict:
     """
     Get absences with optional filtering and scope.
