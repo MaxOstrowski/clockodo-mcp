@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import requests
 
 from clockodo_mcp.models import BillableDistinct, BudgetOption
-from clockodo_mcp.utils import Service, flatten_dict, id_endpoint_map, noid_endpoint_map
+from clockodo_mcp.utils import DeleteEntrygroupV2Filter, Service, flatten_dict, id_endpoint_map, noid_endpoint_map
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
 
 
@@ -58,19 +58,6 @@ def delete(service: ServiceDeleteSingleId, id: int, dry_run: Optional[bool], for
     resp = requests.request("DELETE", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
-
-class DeleteEntrygroupV2Filter(BaseModel):
-    users_id: Optional[int] = None
-    teams_id: Optional[int] = None
-    customers_id: Optional[int] = None
-    projects_id: Optional[int] = None
-    subprojects_id: Optional[int] = None
-    services_id: Optional[int] = None
-    lumpsum_services_id: Optional[int] = None
-    billable: Optional[BillableDistinct] = None
-    texts_id: Optional[int] = None
-    text: Optional[str] = None
-    budget_type: Optional[BudgetOption] = None
 
 @mcp.tool()
 def delete_entrygroup(

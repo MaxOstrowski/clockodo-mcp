@@ -338,6 +338,7 @@ def get_entries_texts(
 ) -> dict:
     """
     Get entry texts with search and filter options.
+    This only returns entries if additional notes are present.
     """
     params = {}
     if term is not None:

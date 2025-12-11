@@ -1,9 +1,6 @@
-from pydantic import BaseModel
-from enum import Enum
-from pydantic import BaseModel, Field
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, BASE_URL, mcp
-from clockodo_mcp.models import AbsenceStatus, AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesGeneralV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, BudgetOption, ChangeRequestIntervalType, CustomerColor, GeneralAccessV2, NonbusinessDayType, TargetHourType, Thresholds
-from clockodo_mcp.utils import Service, flatten_dict, noid_endpoint_map, id_endpoint_map
+from clockodo_mcp.models import AbsenceStatus, AccessType, AccessValue, ApiAccessGroupsProjectsV2AccessValueForPut, ApiAccessGroupsServicesV2AccessTypeForPut, ApiAccessGroupsServicesV2AccessValueForPut, Billable, BillableDistinct, CustomerColor, NonbusinessDayType, TargetHourType
+from clockodo_mcp.utils import CustomerProjectsAccess, EntryGroupFilter, IndividualUserAccessType, ProjectBudget, Service, SubprojectBudget, WorkTimesChangeRequestChange, flatten_dict, noid_endpoint_map, id_endpoint_map
 import requests
 from typing import Optional, Union
 
@@ -137,13 +134,6 @@ def update_targethour(
 	endpoint = id_endpoint_map.get(Service.targethours).format(id=id)
 	resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
 	return resp.json()
-
-
-
-class WorkTimesChangeRequestChange(BaseModel):
-	type: ChangeRequestIntervalType = Field(..., description="1=Added, 2=Removed")
-	time_since: str  # ISO 8601 datetime string
-	time_until: str  # ISO 8601 datetime string
 
 
 @mcp.tool("restricted")
@@ -285,15 +275,9 @@ def create_clock(
 ) -> dict:
     """
     Start a clock (begin a time entry).
-    customers_id (int): Customer ID
-    services_id (int): Service ID
-    billable (int, optional): Billable status
-    duration_transfer (int, optional): Duration transfer
-    projects_id (int, optional): Project ID
-    subprojects_id (int, optional): Subproject ID
-    text (str, optional): Entry text (max 1000 chars)
-    time_since (str, optional): Start time (ISO 8601)
-    users_id (int, optional): User ID
+    text: Entry text (max 1000 chars)
+    time_since: Start time (ISO 8601)
+
     """
     payload = {
         "customers_id": customers_id,
@@ -329,12 +313,11 @@ def update_clock(
 ) -> dict:
     """
     Change duration of a clock entry.
-    id (int): Clock entry ID
-    time_since (str, optional): New start time (ISO 8601)
-    time_since_before (str, optional): Previous start time (ISO 8601)
-    time_until_before (str, optional): Previous end time (ISO 8601)
-    duration (int, optional): New duration
-    duration_before (int, optional): Previous duration
+    time_since: New start time (ISO 8601)
+    time_since_before: Previous start time (ISO 8601)
+    time_until_before: Previous end time (ISO 8601)
+    duration: New duration
+    duration_before: Previous duration
     """
     payload = {}
     if time_since is not None:
@@ -398,20 +381,6 @@ def create_or_update_entry(
         endpoint = noid_endpoint_map.get(Service.entries)
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
-
-
-class EntryGroupFilter(BaseModel):
-    users_id: Optional[int] = None
-    teams_id: Optional[int] = None
-    customers_id: Optional[int] = None
-    projects_id: Optional[int] = None
-    subprojects_id: Optional[int] = None
-    services_id: Optional[int] = None
-    lumpsum_services_id: Optional[int] = None
-    billable: Optional[BillableDistinct] = None  # BillableDistinct
-    texts_id: Optional[int] = None
-    text: Optional[str] = None
-    budget_type: Optional[BudgetOption] = None
 
 
 @mcp.tool()
@@ -514,12 +483,6 @@ def clear_individual_user_access(users_id: int) -> dict:
     return resp.json()
 
 
-class IndividualUserAccessType(Enum):
-    PROJECT = "project"
-    SERVICE = "service"
-    SERVICE_GENERAL = "service_general"
-
-
 @mcp.tool()
 def update_individual_user_access(
     access_type: IndividualUserAccessType,
@@ -538,11 +501,24 @@ def update_individual_user_access(
     if access_type == IndividualUserAccessType.PROJECT:
         endpoint = id_endpoint_map.get(Service.individualuseraccess_users_projects).format(id=users_id)
         payload["id"] = id
+        payload["type"] = type.value
+    if access_type == IndividualUserAccessType.CUSTOMER_PROJECT:
+        endpoint = id_endpoint_map.get(Service.individualuseraccess_users_customersprojects).format(id=users_id)
+        payload["id"] = id
     elif access_type == IndividualUserAccessType.SERVICE:
         endpoint = id_endpoint_map.get(Service.individualuseraccess_users_services).format(id=users_id)
         payload["id"] = id
+        payload["type"] = type.value
+    elif access_type == IndividualUserAccessType.CUSTOMER:
+        endpoint = id_endpoint_map.get(Service.individualuseraccess_users_customers).format(id=users_id)
+        payload["id"] = id
+        payload["type"] = type.value
     elif access_type == IndividualUserAccessType.SERVICE_GENERAL:
         endpoint = id_endpoint_map.get(Service.individualuseraccess_users_services_general).format(id=users_id)
+        payload["type"] = type.value
+    elif access_type == IndividualUserAccessType.CUSTOMER_GENERAL:
+        endpoint = id_endpoint_map.get(Service.individualuseraccess_users_customers_general).format(id=users_id)
+        payload["type"] = type.value
     else:
         raise ValueError("Invalid access_type")
     resp = requests.put(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
@@ -619,9 +595,6 @@ def create_or_update_nonbusiness_group(
     return resp.json()
 
 
-class CustomerProjectsAccess(BaseModel):
-    projects: dict[str, bool]
-
 
 @mcp.tool()
 def create_or_update_customer_projects_access(
@@ -676,9 +649,6 @@ def create_or_update_service_access(
         endpoint = noid_endpoint_map.get(Service.users_access_services)
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
-
-
-from typing import Any
 
 
 @mcp.tool()
@@ -844,48 +814,6 @@ def create_or_update_overtimereduction(
         resp = requests.post(BASE_URL + endpoint, headers=AUTH_HEADERS, json=payload)
     return resp.json()
 
-
-
-from pydantic import BaseModel, Field
-
-
-class SubprojectBudget(BaseModel):
-    amount: Optional[float] = Field(
-        None,
-        description="Budget amount (float, -99999999.99 to 99999999.99)",
-        ge=-99999999.99,
-        le=99999999.99,
-    )
-    monetary: Optional[bool] = Field(
-        None,
-        description="Is the budget monetary?"
-    )
-    hard: Optional[bool] = Field(
-        None,
-        description="Is the budget hard?"
-    )
-    notification_thresholds: Optional[list[Thresholds]] = Field(
-        None,
-        description="List of notification thresholds (schema depends on Thresholds model) "
-                    "Percent50 = 50, "
-                    "Percent60 = 60, "
-                    "Percent70 = 70, "
-                    "Percent80 = 80, "
-                    "Percent90 = 90, "
-                    "Percent100 = 100, "
-                    "Percent110 = 110, "
-                    "Percent120 = 120, "
-                    "Percent130 = 130, "
-                    "Percent140 = 140, "
-                    "Percent150 = 150, "
-                    "Percent200 = 200, "
-                    "Percent250 = 250, "
-                    "Percent300 = 300"
-    )
-
-
-class ProjectBudget(SubprojectBudget):
-    from_subprojects: Optional[bool] = None
 
 
 @mcp.tool()

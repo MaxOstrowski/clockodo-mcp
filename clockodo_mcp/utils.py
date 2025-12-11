@@ -5,9 +5,9 @@ Utility functions and classes for Clockodo MCP integration.
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from clockodo_mcp.models import AbsenceStatus, AbsenceType, Billable, BudgetSource
+from clockodo_mcp.models import AbsenceStatus, AbsenceType, Billable, BillableDistinct, BudgetOption, BudgetSource, ChangeRequestIntervalType, Thresholds
 
 class Service(Enum):
     """ All available Clockodo MCP services. """
@@ -149,11 +149,24 @@ class ApiUsersV3_SortForIndex(str, Enum):
 class EntriesTextFilter(BaseModel):
     billable: Optional[Billable] = None
     customers_id: Optional[int] = None
-    day: Optional[str] = None  # Date string
+    day: Optional[str] = Field(
+        None,
+        description="Date string, format: YYYY-MM-DD",
+        example="2023-02-28"
+    )
     projects_id: Optional[list[int]] = None
     services_id: Optional[list[int]] = None
-    time_since: Optional[str] = None  # Date string
-    time_until: Optional[str] = None  # Date string
+    from pydantic import Field
+    time_since: Optional[str] = Field(
+        None,
+        description="Date string, format: YYYY-MM-DD",
+        example="2023-02-28"
+    )
+    time_until: Optional[str] = Field(
+        None,
+        description="Date string, format: YYYY-MM-DD",
+        example="2023-02-28"
+    )
     users_id: Optional[list[int]] = None
 
 class CustomerFilter(BaseModel):
@@ -212,6 +225,94 @@ class AbsencesFilter(BaseModel):
     users_active: Optional[bool] = None
     users_id: Optional[list[int]] = None
     year: Optional[list[int]] = None
+
+
+class DeleteEntrygroupV2Filter(BaseModel):
+    users_id: Optional[int] = None
+    teams_id: Optional[int] = None
+    customers_id: Optional[int] = None
+    projects_id: Optional[int] = None
+    subprojects_id: Optional[int] = None
+    services_id: Optional[int] = None
+    lumpsum_services_id: Optional[int] = None
+    billable: Optional[BillableDistinct] = None
+    texts_id: Optional[int] = None
+    text: Optional[str] = None
+    budget_type: Optional[BudgetOption] = None
+
+
+class WorkTimesChangeRequestChange(BaseModel):
+	type: ChangeRequestIntervalType = Field(..., description="1=Added, 2=Removed")
+	time_since: str  # ISO 8601 datetime string
+	time_until: str  # ISO 8601 datetime string
+
+class EntryGroupFilter(BaseModel):
+    users_id: Optional[int] = None
+    teams_id: Optional[int] = None
+    customers_id: Optional[int] = None
+    projects_id: Optional[int] = None
+    subprojects_id: Optional[int] = None
+    services_id: Optional[int] = None
+    lumpsum_services_id: Optional[int] = None
+    billable: Optional[BillableDistinct] = None
+    texts_id: Optional[int] = None
+    text: Optional[str] = None
+    budget_type: Optional[BudgetOption] = None
+
+
+class CustomerProjectsAccess(BaseModel):
+    projects: dict[str, bool]
+
+
+class IndividualUserAccessType(Enum):
+    PROJECT = "project"
+    SERVICE = "service"
+    SERVICE_GENERAL = "service_general"
+    CUSTOMER = "customer"
+    CUSTOMER_GENERAL = "customer_general"
+    CUSTOMER_PROJECT = "customer_project"
+
+
+
+class SubprojectBudget(BaseModel):
+    amount: Optional[float] = Field(
+        None,
+        description="Budget amount (float, -99999999.99 to 99999999.99)",
+        ge=-99999999.99,
+        le=99999999.99,
+    )
+    monetary: Optional[bool] = Field(
+        None,
+        description="Is the budget monetary?"
+    )
+    hard: Optional[bool] = Field(
+        None,
+        description="Is the budget hard?"
+    )
+    notification_thresholds: Optional[list[Thresholds]] = Field(
+        None,
+        description="List of notification thresholds (schema depends on Thresholds model) "
+                    "Percent50 = 50, "
+                    "Percent60 = 60, "
+                    "Percent70 = 70, "
+                    "Percent80 = 80, "
+                    "Percent90 = 90, "
+                    "Percent100 = 100, "
+                    "Percent110 = 110, "
+                    "Percent120 = 120, "
+                    "Percent130 = 130, "
+                    "Percent140 = 140, "
+                    "Percent150 = 150, "
+                    "Percent200 = 200, "
+                    "Percent250 = 250, "
+                    "Percent300 = 300"
+    )
+
+
+class ProjectBudget(SubprojectBudget):
+    from_subprojects: Optional[bool] = None
+
+
 
 
 
