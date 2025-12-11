@@ -422,13 +422,12 @@ def get_projects_reports(
 @mcp.tool()
 def get_subprojects(
     filter: Optional[SubprojectsFilter] = None,
-    sort: Optional[SortIdName] = None,
+    sort: Optional[list[SortIdName]] = None,
     page: Optional[int] = None,
     items_per_page: Optional[int] = None
 ) -> dict:
     """
     Get subprojects with optional filtering, sorting, and paging.
-    sort parameter might be broken?
     """
     params = {}
     if filter is not None:
