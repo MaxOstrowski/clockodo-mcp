@@ -26,8 +26,6 @@ if __name__ == "__main__":
 
 # search for all delete endpoints again
 
-# get_all with entries is missing time_since
-
 # get_entries_text filter {
 #   "filter": {
 #     "users_id": [

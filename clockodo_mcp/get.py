@@ -17,7 +17,6 @@ class ServicGetList(Enum):
     userreports = Service.userreports.value
     accessgroups = Service.accessgroups.value
     clock = Service.clock.value
-    entries = Service.entries.value
     holidaysquota = Service.holidaysquota.value
     nonbusinessdays = Service.nonbusinessdays.value
     nonbusinessgroups = Service.nonbusinessgroups.value
@@ -78,6 +77,58 @@ def get(id: int, service: ServiceGetById) -> dict:
     return resp.json()
 
 # manually written get functions for services with special parameters
+
+class EntriesFilter(BaseModel):
+    users_id: Optional[int] = None
+    customers_id: Optional[int] = None
+    projects_id: Optional[int] = None
+    subprojects_id: Optional[int] = None
+    services_id: Optional[int] = None
+    lumpsum_services_id: Optional[int] = None
+    billable: Optional[BillableDistinct] = None
+    texts_id: Optional[int] = None
+    text: Optional[str] = None
+    budget_type: Optional[BudgetOption] = None
+
+@mcp.tool()
+def get_entries(
+    time_since: str,
+    time_until: str,
+    calc_also_revenues_for_projects_with_hard_budget: Optional[bool] = None,
+    enhanced_list: Optional[bool] = None,
+    filter: Optional[EntriesFilter] = None,
+    page: Optional[int] = None,
+    items_per_page: Optional[int] = None
+) -> dict:
+    """
+    Get entries (time entries) for a given time range and optional filters.
+    Parameters:
+        time_since: Start datetime (required)
+        time_until: End datetime (required)
+        calc_also_revenues_for_projects_with_hard_budget: Optional boolean
+        enhanced_list: Optional boolean
+        filter: Optional EntriesFilter model
+        page: Optional page number
+        items_per_page: Optional items per page
+    """
+    params = {
+        "time_since": time_since,
+        "time_until": time_until,
+    }
+    if calc_also_revenues_for_projects_with_hard_budget is not None:
+        params["calc_also_revenues_for_projects_with_hard_budget"] = calc_also_revenues_for_projects_with_hard_budget
+    if enhanced_list is not None:
+        params["enhanced_list"] = enhanced_list
+    if filter is not None:
+        filter_dict = filter.model_dump(exclude_none=True)
+        params["filter"] = flatten_dict(filter_dict, parent_key="filter")
+    if page is not None:
+        params["page"] = page
+    if items_per_page is not None:
+        params["items_per_page"] = items_per_page
+    endpoint = noid_endpoint_map.get(Service.entries)
+    resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
+    return resp.json()
 
 
 class EntryGroupsFilter(BaseModel):
