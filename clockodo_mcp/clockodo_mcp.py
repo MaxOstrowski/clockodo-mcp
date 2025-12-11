@@ -16,7 +16,10 @@ BASE_URL = "https://my.clockodo.com/api"
 class ToolRestrictor:
     def __init__(self):
         self.collected_tools = []
-        self.mcp = FastMCP("Clockodo MCP Server", json_response=True)
+        self.mcp = FastMCP("""Clockodo MCP Server
+This MCP server provides integration with the Clockodo time tracking API.
+It allows querying, creating, and updating time entries (entries), users, projects(subprojects), and more.
+Use this server to automate and analyze your time tracking data.""", json_response=True)
 
     def tool(self, flag: str = "default"):
         def decorator(func):

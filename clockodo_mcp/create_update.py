@@ -32,21 +32,22 @@ def create_targethour(
 ) -> dict:
 	"""
 	Create a targethour entry.
+    Specifies how many hours a user is expected to work in a given time period.
 
 	Required parameters:
-		users_id (int): User ID. Minimum: 1. Example: 42
+		users_id: User ID. Minimum: 1. Example: 42
 		type (TargetHourType): TargetHourType. Example: "default"
-		date_since (str): Start date (YYYY-MM-DD). Format: date. Example: "2023-02-28"
-		date_until (str): End date (YYYY-MM-DD or null). Format: date. Example: "2023-03-31"
-		compensation_monthly (float): Monthly compensation in minutes. Min: 0, Max: 744. Example: 160.0
-		monday, tuesday, wednesday, thursday, friday, saturday, sunday (float):
+		date_since: Start date (YYYY-MM-DD). Format: date. Example: "2023-02-28"
+		date_until: End date (YYYY-MM-DD or null). Format: date. Example: "2023-03-31"
+		compensation_monthly: Monthly compensation in minutes. Min: 0, Max: 744. Example: 160.0
+		monday, tuesday, wednesday, thursday, friday, saturday, sunday:
 			Target hours per day. Min: 0, Max: 24. Format: float. Example: 8.0
-		monthly_target (float): Monthly target hours. Min: 0, Max: 744. Format: float. Example: 160.0
-		workday_monday, workday_tuesday, workday_wednesday, workday_thursday, workday_friday, workday_saturday, workday_sunday (bool):
+		monthly_target: Monthly target hours. Min: 0, Max: 744. Format: float. Example: 160.0
+		workday_monday, workday_tuesday, workday_wednesday, workday_thursday, workday_friday, workday_saturday, workday_sunday:
 			Is workday. Example: True
-		compensation_daily (float): Automatic time compensation per day in minutes. Min: 0, Max: 1440. Example: 30.0
-		holiday_fixed_credit (int): Fixed holiday credit. Enum: [0, 1]. Example: 1
-		surcharge_models_id (int): Surcharge model ID. Min: 1. Example: 5
+		compensation_daily: Automatic time compensation per day in minutes. Min: 0, Max: 1440. Example: 30.0
+		holiday_fixed_credit: Fixed holiday credit. Enum: [0, 1]. Example: 1
+		surcharge_models_id: Surcharge model ID. Min: 1. Example: 5
 	"""
 	payload = {
 		"users_id": users_id,
@@ -101,21 +102,21 @@ def update_targethour(
 	Update a targethour entry.
 
 	Required parameters:
-		id (int): Targethour row ID. Example: 1
-		type (TargetHourType): TargetHourType. Example: "default"
-		date_since (str): Start date (YYYY-MM-DD). Format: date. Example: "2023-02-28"
+		id: Targethour row ID. Example: 1
+		type): Example: "default"
+		date_since: Start date (YYYY-MM-DD). Format: date. Example: "2023-02-28"
 
 	Optional parameters:
-		date_until (str): End date (YYYY-MM-DD or null). Format: date. Example: "2023-03-31"
-		monday, tuesday, wednesday, thursday, friday, saturday, sunday (float):
+		date_until: End date (YYYY-MM-DD or null). Format: date. Example: "2023-03-31"
+		monday, tuesday, wednesday, thursday, friday, saturday, sunday:
 			Target hours per day. Min: 0, Max: 24. Format: float. Example: 8.0
-		monthly_target (float): Monthly target hours. Min: 0, Max: 744. Format: float. Example: 160.0
-		workday_monday, workday_tuesday, workday_wednesday, workday_thursday, workday_friday, workday_saturday, workday_sunday (bool):
+		monthly_target: Monthly target hours. Min: 0, Max: 744. Format: float. Example: 160.0
+		workday_monday, workday_tuesday, workday_wednesday, workday_thursday, workday_friday, workday_saturday, workday_sunday:
 			Is workday. Example: True
-		compensation_daily (float): Compensation per day in minutes. Min: 0, Max: 1440. Example: 30.0
-		compensation_monthly (float): Compensation per month in minutes. Min: 0, Max: 744. Example: 160.0
-		holiday_fixed_credit (int): Fixed holiday credit. Enum: [0, 1]. E
-		surcharge_models_id (int): Surcharge model ID. Min: 1. Example: 5
+		compensation_daily: Compensation per day in minutes. Min: 0, Max: 1440. Example: 30.0
+		compensation_monthly: Compensation per month in minutes. Min: 0, Max: 744. Example: 160.0
+		holiday_fixed_credit: Fixed holiday credit. Enum: [0, 1]. E
+		surcharge_models_id: Surcharge model ID. Min: 1. Example: 5
 	"""
 	payload = {
 		"type": type.value,
@@ -143,15 +144,16 @@ def create_worktimeschangerequest(
 	changes: list[WorkTimesChangeRequestChange],
 ) -> dict:
 	"""
-	Create a worktimes change request to modify work times for a user.
+	Create a worktimes change request to request to modify work times for a user.
 	After creation of the request, the worktime can be changed or deleted.
+    Entries should directly be updated instead of creating a change request.
 
-    date (str): Date for the change request. Format: YYYY-MM-DD. Example: "2023-02-28"
-    users_id (int): User ID. Minimum: 1. Example: 42
+    date: Date for the change request. Format: YYYY-MM-DD. Example: "2023-02-28"
+    users_id: User ID. Minimum: 1. Example: 42
     changes: List of change objects. Each object must include:
-        type (str): ChangeRequestIntervalType
-        time_since (str): Start time (ISO 8601). Example: "2023-02-28T12:00:00Z"
-        time_until (str): End time (ISO 8601). Example: "2023-02-28T12:00:00Z"
+        type
+        time_since: Start time (ISO 8601). Example: "2023-02-28T12:00:00Z"
+        time_until: End time (ISO 8601). Example: "2023-02-28T12:00:00Z"
 
 	"""
 	changes_flat = [flatten_dict(c.model_dump()) for c in changes]
@@ -174,10 +176,7 @@ def update_accessgroups_customer(
 ) -> dict:
     """
     Update customer access for a specific access group. If id is provided, updates a specific customer; otherwise, updates general customer access.
-    accessGroupsId (int): Access group ID
-    type (AccessType): Access type
-    value (AccessValue): Access value
-    id (int, optional): Customer ID
+    id: Customer ID
     """
     payload = {
         "type": type.value,
@@ -201,10 +200,8 @@ def update_accessgroups_project(
 ) -> dict:
     """
     Update project access for a specific access group.
-    accessGroupsId (int): Access group ID
-    id (int): Project ID
-    type (str): AccessType
-    value (str): ApiAccessGroupsProjectsV2_AccessValueForPut, Use 0 for no access. Use 1 for full access.
+    accessGroupsId: Access group ID
+    value: Use 0 for no access. Use 1 for full access.
     """
     payload = {
         "id": id,
@@ -225,10 +222,8 @@ def update_accessgroups_service(
 ) -> dict:
     """
     Update service access for a specific access group. If id is provided, updates a specific service; otherwise, updates general service access.
-    accessGroupsId (int): Access group ID
-    id (int): Service ID
-    type (str): ApiAccessGroupsServicesV2_AccessTypeForPut
-    value (str): ApiAccessGroupsServicesV2_AccessValueForPut, Use 0 for no access. Use 1 for full access.
+    id: Service ID
+    value: Use 0 for no access. Use 1 for full access.
     """
     payload = {
         "type": type.value,
@@ -250,7 +245,7 @@ def create_accessgroup(
 ) -> dict:
     """
     Create a new access group.
-    name (str): Name of the access group (max 100 chars)
+    name: Name of the access group (max 100 chars)
     users_ids: IDs of group members
     """
     payload = {"name": name}
@@ -354,9 +349,10 @@ def create_or_update_entry(
     id: Optional[int] = None
 ) -> dict:
     """
-    Create or update an entry in Clockodo MCP.
+    Create or update a worktime entry.
+    Should be used for creation and changing work time entries, not deletions.
     If id is provided, updates the entry
-    If id is not provided, creates a new entry 
+    If id is not provided, creates a new work time entry.
     """
     payload = {
         "customers_id": customers_id,
@@ -400,7 +396,7 @@ def update_entrygroup(
     filter: Optional[EntryGroupFilter] = None
 ) -> dict:
     """
-    Update entry groups in Clockodo MCP (bulk update).
+    Update entry groups (bulk update).
     Update multiple entry groups at once, based on a time range and optional filters (user, project, billable status, etc.).
     Common use: Change properties (e.g., billable status, text, hourly rate) for all entries matching the filter and time range.
     time in format date-time, example: "2023-02-28T12:00:00Z"
@@ -448,7 +444,7 @@ def create_or_update_holiday_quota(
     id: Optional[int] = None
 ) -> dict:
     """
-    Create or update a holiday quota in Clockodo MCP.
+    Create or update a holiday quota.
     If id is provided, updates the quota
     If id is not provided, creates a new quota
     year is of form YYYY, example: 2023
@@ -493,8 +489,7 @@ def update_individual_user_access(
 ) -> dict:
     """
     Update individual user access for a project, service, or general service.
-    users_id (int): User ID
-    id (int, optional): Project or Service ID (not required for service_general)
+    id: Project or Service ID (not required for service_general)
     type: only add allowed for service and service_general
     """
     payload = {"value": value.value}
@@ -663,8 +658,8 @@ def create_or_update_customer(
     id: Optional[int] = None
 ) -> dict:
     """
-    Create or update a customer (v3).
-    If id is provided, updates the customer (PUT /v3/customers/{id}), else creates a new customer (POST /v3/customers).
+    Create or update a customer.
+    If id is provided, updates the customer, else creates a new customer.
     Fields:
       name: Customer name (required for create, max 100)
       number: Freely selectable number (max 50)
@@ -717,13 +712,13 @@ def create_or_update_holidayscarry(
     id: Optional[int] = None
 ) -> dict:
     """
-    Create or update a holiday carryover record (v3).
+    Create or update a holiday carryover record.
     If id is provided, updates the record, else user_id is needed to create a new record.
     Fields:
-        year (int): Year for the carryover (2000-2037)
-        count (float): Carryover amount, Only full and half values allowed, e.g. 4.0 or 4.5
-        note (str, optional): Note (max 1000)
-        id (int, optional): Record id for update
+        year: Year for the carryover (2000-2037)
+        count: Carryover amount, Only full and half values allowed, e.g. 4.0 or 4.5
+        note: Note (max 1000)
+        id: Record id for update
     """
     payload = {}
     if year is not None:
@@ -752,14 +747,14 @@ def create_or_update_overtimecarry(
     id: Optional[int] = None
 ) -> dict:
     """
-    Create or update an overtime carryover record (v3).
+    Create or update an overtime carryover record.
     If id is provided, updates the record, else users_id is needed to create a new record.
     Fields:
-        year (int): Year for the carryover (2000-2037)
-        count (float): Carryover amount, can be negative or positive
-        note (str, optional): Note (max 1000)
-        users_id (int, optional): User id for create
-        id (int, optional): Record id for update
+        year: Year for the carryover (2000-2037)
+        count: Carryover amount, can be negative or positive
+        note: Note (max 1000)
+        users_id: User id for create
+        id: Record id for update
     """
     payload = {}
     if year is not None:
@@ -788,7 +783,7 @@ def create_or_update_overtimereduction(
     id: Optional[int] = None
 ) -> dict:
     """
-    Create or update an overtime reduction record (v3).
+    Create or update an overtime reduction record.
     If id is provided, updates the record, else creates a new record.
     Fields:
         users_id: User ID (required for create)
@@ -830,7 +825,7 @@ def create_or_update_subproject(
     id: Optional[int] = None
 ) -> dict:
     """
-    Create or update a subproject (v3).
+    Create or update a subproject.
     If id is provided, updates the subproject else creates a new subproject.
     Fields:
         projects_id: Parent project ID (required for create)

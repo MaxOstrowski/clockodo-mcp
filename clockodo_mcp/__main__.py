@@ -15,11 +15,9 @@ def main():
 if __name__ == "__main__":
     main()
 
-
-#we have update_entry_group but not create ?
 # the post and put method expect payload in the body not as params, maybe flatten_dict does not work here the same as in get. Otherwise it would be cool
 # if we could use the same flattening method
 
 # write better comments what functions actually do and represent
 # make a release
-#write a mcp server description
+# write a mcp server description

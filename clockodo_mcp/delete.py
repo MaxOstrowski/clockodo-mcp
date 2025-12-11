@@ -67,10 +67,11 @@ def delete_entrygroup(
         filter: Optional[DeleteEntrygroupV2Filter] = None
     ) -> dict:
         """Delete entry groups by filter and time range
+        This can delete a set of work time entries in one call.
 
         time_since: Start of the time range (ISO 8601 string, required)
         time_until: End of the time range (ISO 8601 string, required)
-        confirm_key: Optional confirmation key
+        confirm_key: Optional confirmation key, resend the same request with the key to confirm deletion
         filter: Optional
         """
         endpoint_template = noid_endpoint_map.get(Service.entrygroups)

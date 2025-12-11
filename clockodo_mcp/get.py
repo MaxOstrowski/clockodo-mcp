@@ -102,6 +102,7 @@ def get_entries(
 ) -> dict:
     """
     Get entries (time entries) for a given time range and optional filters.
+    This gives the actual work time entries
     Parameters:
         time_since: Start datetime (required)
         time_until: End datetime (required)
@@ -274,6 +275,7 @@ def get_users(id: int, scope: Optional[UserScope]) -> dict:
 def get_worktimes(users_id: int, date_since: str, date_until: str) -> dict:
     """
     Get worktimes by user ID and date range.
+    An alternative to the entries endpoint to get worktimes only.
     example date: '2023-01-01'
     """
     endpoint = noid_endpoint_map.get(Service.worktimes)
@@ -338,7 +340,8 @@ def get_entries_texts(
 ) -> dict:
     """
     Get entry texts with search and filter options.
-    This only returns entries if additional notes are present.
+    This only returns entries if additional notes/texts are present in the entry.
+    Only used when seraching for specific entry texts.
     """
     params = {}
     if term is not None:
@@ -579,7 +582,7 @@ def get_projects(
     return resp.json()
 
 
-@mcp.tool()
+@mcp.tool("restricted")
 def get_services(
     filter: Optional[ServicesFilter] = None,
     sort: Optional[list[SortIdNameActive]] = None,
