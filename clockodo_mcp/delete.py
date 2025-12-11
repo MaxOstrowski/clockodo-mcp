@@ -54,15 +54,15 @@ def delete(service: ServiceDeleteSingleId, id: int, dry_run: Optional[bool], for
 
 
 class DeleteEntrygroupV2Filter(BaseModel):
-    users_id: Optional[int]
-    teams_id: Optional[int]
-    customers_id: Optional[int]
-    projects_id: Optional[int]
-    subprojects_id: Optional[int]
-    services_id: Optional[int]
-    lumpsum_services_id: Optional[int]
+    users_id: Optional[int] = None
+    teams_id: Optional[int] = None
+    customers_id: Optional[int] = None
+    projects_id: Optional[int] = None
+    subprojects_id: Optional[int] = None
+    services_id: Optional[int] = None
+    lumpsum_services_id: Optional[int] = None
     billable: Optional[BillableDistinct] = None
-    texts_id: Optional[int]
+    texts_id: Optional[int] = None
     text: Optional[str] = None
     budget_type: Optional[BudgetOption] = None
 
