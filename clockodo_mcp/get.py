@@ -102,7 +102,8 @@ def get_entries(
 ) -> dict:
     """
     Get entries (time entries) for a given time range and optional filters.
-    This gives the actual work time entries
+    This gives the actual work time entries, each individual entry.
+    Duration is given in seconds.
     Parameters:
         time_since: Start datetime (required)
         time_until: End datetime (required)
@@ -148,10 +149,10 @@ class EntryGroupsFilter(BaseModel):
     subprojects_id: Optional[int] = None
     services_id: Optional[int] = None
     lumpsum_services_id: Optional[int] = None
-    billable: Optional[BillableDistinct] = None  # Could be an enum if BillableDistinct is defined
+    billable: Optional[BillableDistinct] = None
     texts_id: Optional[int] = None
     text: Optional[str] = None
-    budget_type: Optional[BudgetOption] = None  # Could be an enum if BudgetOption is defined
+    budget_type: Optional[BudgetOption] = None
 
 
 @mcp.tool()
@@ -166,6 +167,8 @@ def get_entrygroups(
 ) -> dict:
     """
     Get entry groups (aggregated time entries) for a given time range and grouping.
+    This aggregates the work time entries by the specified grouping criteria and gives the total time for each group.
+    Duration is given in seconds.
     Parameters:
         time_since: Start datetime, Example: 2023-02-28T12:00:00Z
         time_until: End datetime, Example: 2023-03-28T12:00:00Z
