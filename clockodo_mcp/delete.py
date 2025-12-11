@@ -66,6 +66,7 @@ class DeleteEntrygroupV2Filter(BaseModel):
     text: Optional[str] = None
     budget_type: Optional[BudgetOption] = None
 
+@mcp.tool()
 def delete_entrygroup(
         time_since: str,
         time_until: str,
