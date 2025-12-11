@@ -17,13 +17,19 @@ class ServiceDeleteSingleId(Enum):
     holidaysquota = Service.holidaysquota.value
     nonbusinessdays = Service.nonbusinessdays.value
     nonbusinessgroups = Service.nonbusinessgroups.value
+    worktimes = Service.worktimes.value
+    customers = Service.customers.value
     holidayscarry = Service.holidayscarry.value
     overtimecarry = Service.overtimecarry.value
     overtimereductions = Service.overtimereductions.value
+    projects = Service.projects.value
+    subprojects = Service.subprojects.value
     teams = Service.teams.value
     users = Service.users.value
     usersnonbusinessgroups = Service.usersnonbusinessgroups.value
     absences = Service.absences.value
+    lumpsumservices = Service.lumpsumservices.value
+    services = Service.services.value
     worktimeschangerequest = Service.worktimeschangerequest.value
 
 
@@ -94,3 +100,24 @@ def delete_entrygroup(
         resp = requests.request("DELETE", url=BASE_URL + endpoint_template, headers=AUTH_HEADERS, params=flatten_dict(params)
         )
         return resp.json()
+
+
+@mcp.tool("restricted")
+def delete_clock(id: int, away: Optional[int] = None, time_until: Optional[str] = None) -> dict:
+    """Stop the clock by ID.
+
+    id: Clock ID (required)
+    away: Optional user ID to set as away
+    time_until: Optional date-time string until which the away status should be set
+    """
+    endpoint_template = id_endpoint_map.get(Service.clock)
+    if not endpoint_template:
+        raise ValueError("No endpoint mapping found for Service.worktimes")
+    endpoint = endpoint_template.format(id=id)
+    params = {}
+    if away is not None:
+        params["away"] = away
+    if time_until is not None:
+        params["time_until"] = time_until
+    resp = requests.request("DELETE", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
+    return resp.json()
