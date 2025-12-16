@@ -19,7 +19,36 @@ class ToolRestrictor:
         self.mcp = FastMCP("""Clockodo MCP Server
 This MCP server provides integration with the Clockodo time tracking API.
 It allows querying, creating, and updating time entries (entries), users, projects(subprojects), and more.
-Use this server to automate and analyze your time tracking data.""", json_response=True)
+Use this server to automate and analyze your time tracking data.
+                           
+ - targethours: Expected (planned) working hours for users.
+ - userreports: Reports summarizing user activity and time tracking.
+ - worktimes: Actual recorded work times for users.
+ - accessgroups: Groups that define access permissions for users.
+ - clock: Start or stop a running time entry (clock).
+ - entries: Individual time entries (work logs).
+ - entries_texts: Additional notes or texts attached to time entries.
+ - entrygroups: Aggregated (grouped) time entries, e.g., by project or user.
+ - holidaysquota: Holiday entitlement (quota) for users.
+ - individualuseraccess: Permissions for individual users.
+ - nonbusinessdays: Company-wide non-working days (e.g., holidays).
+ - nonbusinessgroups: Groups of non-working days (e.g., holiday calendars).
+ - users_access_customers_projects: User access to specific customers and projects.
+ - users_access_services: User access to specific services.
+ - customers: Customer records.
+ - customers_count_projects: Number of projects per customer.
+ - holidayscarry: Carried-over holiday balances.
+ - overtimecarry: Carried-over overtime balances.
+ - overtimereductions: Overtime reductions (corrections).
+ - subprojects: Subdivisions of projects.
+ - teams: Teams of users.
+ - users: User records.
+ - usersnonbusinessgroups: Assignment of users to nonbusiness groups.
+ - absences: Absence records (e.g., vacation, sick leave).
+ - lumpsumservices: Services billed as a lump sum.
+ - projects: Project records.
+ - projects_reports: Reports summarizing project activity.
+ - services: Service records (types of work performed). """, json_response=True)
 
     def tool(self, flag: str = "default"):
         def decorator(func):
