@@ -338,7 +338,7 @@ def create_or_update_entry(
     time_since: Optional[str] = None,
     time_until: Optional[str] = None,
     text: Optional[str] = None,
-    billable: Optional[bool] = None,
+    billable: Optional[Billable] = None,
     projects_id: Optional[int] = None,
     subprojects_id: Optional[int] = None,
     lump_sum_services_id: Optional[int] = None,
@@ -353,6 +353,8 @@ def create_or_update_entry(
     Should be used for creation and changing work time entries, not deletions.
     If id is provided, updates the entry
     If id is not provided, creates a new work time entry.
+
+    When creating, customers_id and billable are required.
     """
     payload = {
         "customers_id": customers_id,
