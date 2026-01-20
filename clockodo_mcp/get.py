@@ -243,11 +243,23 @@ def get_userreports(id: int, year: int, type: Optional[UserReportType]) -> dict:
     resp = requests.request("GET", url=BASE_URL + endpoint, headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
-
 @mcp.tool()
-def get_nonbusinessdays(id: int, year: Optional[int]) -> dict:
+def get_nonbusinessdays(year: Optional[int]) -> dict:
     """
-    Get nonbusinessdays by ID and optional year.
+    Get nonbusinessdays, optionally by year.
+    """
+    endpoint_template = noid_endpoint_map.get(Service.nonbusinessdays)
+    params = {}
+    if year is not None:
+        params["year"] = year
+    resp = requests.request("GET", url=BASE_URL + endpoint_template, headers=AUTH_HEADERS, params=flatten_dict(params))
+    return resp.json()
+
+
+@mcp.tool("restricted")
+def get_nonbusinessdays_by_id(id: int, year: Optional[int]) -> dict:
+    """
+    Get nonbusinessdays by business day ID and optional year.
     """
     endpoint_template = id_endpoint_map.get(Service.nonbusinessdays)
     endpoint = endpoint_template.format(id=id)
