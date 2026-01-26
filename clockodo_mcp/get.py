@@ -7,7 +7,7 @@ from pydantic import BaseModel
 import requests
 from clockodo_mcp.clockodo_mcp import AUTH_HEADERS, mcp, BASE_URL
 
-from clockodo_mcp.models import AbsenceScope, BillableDistinct, BudgetOption, ChangeRequestStatus, Grouping, UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
+from clockodo_mcp.models import AbsenceScope, AbsenceV4, BillableDistinct, BudgetOption, ChangeRequestStatus, Grouping, UserScope, UserReportType, CustomerProjectScope, EntryTextMode, ServiceScope, SortIdName, SortIdNameActive
 from clockodo_mcp.utils import TeamsFilter, AbsencesFilter, ApiProjectsReports_SortForIndex, ApiUsersV3_SortForIndex, CustomerFilter, EntriesTextFilter, LumpSumServicesFilter, ProjectsFilter, ProjectsReportsFilter, Service, ServicesFilter, SubprojectsFilter, UsersFilter, UsersNonbusinessGroupsFilter, flatten_dict, flatten_list, id_endpoint_map, noid_endpoint_map
 
 
@@ -534,7 +534,7 @@ def get_users_nonbusinessgroups(
 def get_absences(
     filter: Optional[AbsencesFilter] = None,
     scope: Optional[AbsenceScope] = None
-) -> dict:
+) -> dict[str, list[AbsenceV4]]:
     """
     Get absences with optional filtering and scope.
     """
@@ -542,7 +542,7 @@ def get_absences(
     if filter is not None:
         params['filter'] = filter
     if scope is not None:
-        params['scope'] = scope
+        params['scope'] = scope.value
     resp = requests.request("GET", url=BASE_URL + noid_endpoint_map[Service.absences], headers=AUTH_HEADERS, params=flatten_dict(params))
     return resp.json()
 
